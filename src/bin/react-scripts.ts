@@ -15,7 +15,7 @@ const src = {
   build: require.resolve("react-scripts/scripts/build"),
 };
 
-const paths = require(src.paths);
+const paths: Paths = require(src.paths);
 
 /**
  * Important!!!
@@ -24,7 +24,7 @@ const paths = require(src.paths);
 
 require(src.env);
 
-const config = readConfig()["react-scripts"];
+const config = readConfig("react-scripts");
 
 const start = parseStart();
 
@@ -35,7 +35,13 @@ if (start) {
 
   require(src.start);
 } else if (build) {
-  if (Array.isArray(build)) {
+  if (!Array.isArray(build)) {
+    process.env.INLINE_RUNTIME_CHUNK = "false";
+
+    overwritePaths(build);
+
+    require(src.build);
+  } else {
     const [bin] = process.argv;
 
     const _bin = bin.endsWith("ts-node") ? `${bin} -P tsconfig.dist.json` : bin;
@@ -45,15 +51,7 @@ if (start) {
 
       execSync(command, { stdio: "inherit" });
     });
-
-    process.exit();
   }
-
-  process.env.INLINE_RUNTIME_CHUNK = "false";
-
-  overwritePaths(build);
-
-  require(src.build);
 }
 
 function parseBuild() {
@@ -67,7 +65,7 @@ function parseBuild() {
     return [...config.apps];
   }
 
-  const publicUrlOrPath = "./";
+  const paths: PathsArg = { publicUrlOrPath: "./" };
 
   const entry = "--entry";
 
@@ -76,33 +74,20 @@ function parseBuild() {
   const isCustom = existsInLine(entry) && existsInLine(build);
 
   if (!isCustom) {
-    let appIndexJs = paths.appIndexJs;
-    let appBuild = paths.appBuild;
-
     if (config?.entry) {
-      appIndexJs = path.resolve(config.entry);
+      paths.appIndexJs = path.resolve(config.entry);
     }
 
     if (config?.build) {
-      appBuild = path.resolve(config.build);
+      paths.appBuild = path.resolve(config.build);
     }
+  } else {
+    paths.appIndexJs = path.resolve(findValue(entry));
 
-    return {
-      appIndexJs,
-      publicUrlOrPath,
-      appBuild,
-    };
+    paths.appBuild = path.resolve(findValue(build));
   }
 
-  const appIndexJs = path.resolve(findValue(entry));
-
-  const appBuild = path.resolve(findValue(build));
-
-  return {
-    appIndexJs,
-    publicUrlOrPath,
-    appBuild,
-  };
+  return paths;
 }
 
 function parseStart() {
@@ -112,32 +97,32 @@ function parseStart() {
     return;
   }
 
+  const paths: PathsArg = {};
+
+  if (config?.entry) {
+    paths.appIndexJs = path.resolve(config.entry);
+  }
+
   const target = findValue(script);
 
   if (target) {
-    return { appIndexJs: path.resolve(target) };
+    paths.appIndexJs = path.resolve(target);
   }
 
-  if (config?.entry) {
-    const entry = config.entry;
-
-    return { appIndexJs: path.resolve(entry) };
-  }
-
-  return {};
+  return paths;
 }
 
 /**
  * Update paths in cache with input
  * https://nodejs.org/api/modules.html#modules_require_cache
- * @param _paths object
+ * @param paths object
  * https://github.com/facebook/create-react-app/blob/6a51dcdfb84d1a47294fcbf9d7d569eaf1b4d571/packages/react-scripts/config/paths.js#L60
  */
-function overwritePaths(_paths: any) {
+function overwritePaths(_paths: PathsArg) {
   const log = ["Overwrite paths\n"];
 
   Object.keys(_paths).forEach((key) => {
-    log.push(`${key}: ${_paths[key]}`);
+    log.push(`${key}: ${(_paths as any)[key]}`);
   });
 
   console.log(log.join("\n"));
@@ -154,4 +139,33 @@ function overwritePaths(_paths: any) {
       ..._paths,
     },
   };
+}
+
+/**
+ * Typings
+ */
+
+type PathsArg = Partial<Paths>;
+
+interface Paths {
+  dotenv: string;
+  appPath: string;
+  appBuild: string;
+  appPublic: string;
+  appHtml: string;
+  appIndexJs: string;
+  appPackageJson: string;
+  appSrc: string;
+  appTsConfig: string;
+  appJsConfig: string;
+  yarnLockFile: string;
+  testsSetup: string;
+  proxySetup: string;
+  appNodeModules: string;
+  publicUrlOrPath: string;
+  ownPath: string;
+  ownNodeModules: string;
+  appTypeDeclarations: string;
+  ownTypeDeclarations: string;
+  moduleFileExtensions: string[];
 }

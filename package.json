@@ -36,7 +36,7 @@
   "scripts": {
     "start": "ts-node -P tsconfig.dist.json src/bin/index.ts",
     "build": "tsc -P tsconfig.dist.json",
-    "react-scripts": "ts-node -P tsconfig.dist.json src/bin/react.dev.ts",
+    "react-scripts": "ts-node -P tsconfig.dist.json src/bin/react-scripts.ts",
     "publish:it": "ts-node -P tsconfig.dist.json src/bin/publish.ts",
     "pack:it": "ts-node -P tsconfig.dist.json src/bin/publish.ts --pack"
   },

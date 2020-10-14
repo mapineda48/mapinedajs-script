@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-const { argv } = process;
+import { existsInLine } from "..";
 
-const includes = (value: string) => argv.includes(value);
+const react = existsInLine("--react-scripts");
 
-const react = includes("--react-scripts");
+const publish = existsInLine("--pack") || existsInLine("--publish");
 
-const publish = includes("--pack") || includes("--publish");
-
-const init = includes("--init");
+const init = existsInLine("--init");
 
 if (react) {
   require("./react-scripts");

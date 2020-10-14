@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import { execSync } from "child_process";
-import { readConfig, readPackage } from "..";
+import { readConfig, readPackage, existsInLine } from "..";
 
 /**
  * https://github.com/features/packages
@@ -45,8 +45,8 @@ try {
  */
 let finalPckg: any = {};
 
-finalPckg.name = pckg.name || 'unknown';
-finalPckg.version = pckg.version || '0.0.0';
+finalPckg.name = pckg.name || "unknown";
+finalPckg.version = pckg.version || "0.0.0";
 finalPckg.author = pckg.author || "Miguel Angel Pineda Vega";
 finalPckg.license = pckg.license || "MIT";
 finalPckg.homepage = pckg.homepage || "";
@@ -88,7 +88,7 @@ if (config?.publish?.trashs) {
  * Only pack packages
  * https://docs.npmjs.com/cli-commands/pack.html
  */
-if (process.argv.includes("--pack")) {
+if (existsInLine("--pack")) {
   execIt("npm pack", { cwd: dist });
   process.exit();
 }

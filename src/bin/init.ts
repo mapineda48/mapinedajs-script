@@ -17,4 +17,4 @@ const config = {
 
 fs.outputJSONSync(path.config, config, { spaces: 2 });
 console.log("init mapineda.json");
-console.log("see: https://github.com/mapineda48/mapinedajs#configurations");
+console.log("see: https://github.com/mapineda48/mapineda-script#configurations");

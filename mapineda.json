@@ -1,7 +1,6 @@
 {
   "react-scripts": {
     "entry": "src/test/react-scripts/index.tsx",
-    "build": "build/index",
     "apps": [
       {
         "entry": "src/test/react-scripts/index.tsx",
