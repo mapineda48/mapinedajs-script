@@ -15,14 +15,14 @@ const src = {
   build: require.resolve("react-scripts/scripts/build"),
 };
 
-const paths: Paths = require(src.paths);
-
 /**
  * Important!!!
  * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/env.js#L15
  */
 
 require(src.env);
+
+const paths: Paths = require(src.paths);
 
 const config = readConfig("react-scripts");
 
@@ -36,8 +36,6 @@ if (start) {
   require(src.start);
 } else if (build) {
   if (!Array.isArray(build)) {
-    process.env.INLINE_RUNTIME_CHUNK = "false";
-
     overwritePaths(build);
 
     require(src.build);
@@ -47,9 +45,21 @@ if (start) {
     const _bin = bin.endsWith("ts-node") ? `${bin} -P tsconfig.dist.json` : bin;
 
     build.forEach((c) => {
-      const command = `${_bin} ${__filename} build --entry ${c.entry} --build ${c.build}`;
+      const command = [
+        _bin,
+        __filename,
+        "build",
+        "--entry",
+        c.entry,
+        "--build",
+        c.build,
+      ];
 
-      execSync(command, { stdio: "inherit" });
+      if (c.publicUrlOrPath) {
+        command.push("--publicUrlOrPath", c.publicUrlOrPath);
+      }
+
+      execSync(command.join(" "), { stdio: "inherit" });
     });
   }
 }
@@ -65,11 +75,13 @@ function parseBuild() {
     return [...config.apps];
   }
 
-  const paths: PathsArg = { publicUrlOrPath: "./" };
+  const paths: PathsArg = {};
 
   const entry = "--entry";
 
   const build = "--build";
+
+  const publicUrlOrPath = "--publicUrlOrPath";
 
   const isCustom = existsInLine(entry) && existsInLine(build);
 
@@ -81,10 +93,18 @@ function parseBuild() {
     if (config?.build) {
       paths.appBuild = path.resolve(config.build);
     }
+
+    if (config?.publicUrlOrPath) {
+      paths.publicUrlOrPath = config.publicUrlOrPath;
+    }
   } else {
     paths.appIndexJs = path.resolve(findValue(entry));
 
     paths.appBuild = path.resolve(findValue(build));
+
+    if (existsInLine(publicUrlOrPath)) {
+      paths.publicUrlOrPath = findValue(publicUrlOrPath);
+    }
   }
 
   return paths;

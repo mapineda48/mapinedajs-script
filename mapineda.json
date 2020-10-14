@@ -1,19 +1,23 @@
 {
   "react-scripts": {
     "entry": "src/test/react-scripts/index.tsx",
+    "publicUrlOrPath": "./",
     "apps": [
       {
         "entry": "src/test/react-scripts/index.tsx",
-        "build": "build/index"
+        "build": "build/index",
+        "publicUrlOrPath": "./index/"
       },
       {
         "entry": "src/test/react-scripts/foo.tsx",
-        "build": "build/foo"
+        "build": "build/foo",
+        "publicUrlOrPath": "./foo/"
       }
     ]
   },
   "publish": {
     "package": {
+      "homepage": "https://github.com/mapineda48/mapinedajs-script#readme",
       "bin": {
         "mapineda-script": "./bin/index.js"
       },

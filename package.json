@@ -1,10 +1,9 @@
 {
   "name": "mapineda-script",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "author": "Miguel Angel Pineda Vega",
   "license": "MIT",
-  "homepage": "https://github.com/mapineda48/mapinedajs-script#readme",
   "bugs": {
     "url": "https://github.com/mapineda48/mapinedajs-script/issues"
   },
