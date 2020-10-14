@@ -6,7 +6,7 @@ import { readConfig, existsInLine, findValue } from "..";
  * minimal overwrite react-scripts config without eject
  */
 
-process.env.NODE_ENV = "development";
+process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
 const src = {
   env: require.resolve("react-scripts/config/env"),
@@ -46,8 +46,8 @@ if (start) {
 
     const _bin = bin.endsWith("ts-node") ? `${bin} -P tsconfig.dist.json` : bin;
 
-    build.forEach((b) => {
-      const command = `${_bin} ${__filename} build --entry ${b.entry} --build ${b.build}`;
+    build.forEach((c) => {
+      const command = `${_bin} ${__filename} build --entry ${c.entry} --build ${c.build}`;
 
       execSync(command, { stdio: "inherit" });
     });
@@ -119,14 +119,7 @@ function parseStart() {
  * https://github.com/facebook/create-react-app/blob/6a51dcdfb84d1a47294fcbf9d7d569eaf1b4d571/packages/react-scripts/config/paths.js#L60
  */
 function overwritePaths(_paths: PathsArg) {
-  const log = ["Overwrite paths\n"];
-
-  Object.keys(_paths).forEach((key) => {
-    log.push(`${key}: ${(_paths as any)[key]}`);
-  });
-
-  console.log(log.join("\n"));
-  console.log();
+  logPaths(_paths);
 
   const current = require.cache[src.paths];
 
@@ -139,6 +132,17 @@ function overwritePaths(_paths: PathsArg) {
       ..._paths,
     },
   };
+}
+
+function logPaths(paths: any) {
+  const log = ["Overwrite paths\n"];
+
+  Object.keys(paths).forEach((key) => {
+    log.push(`${key}: ${paths[key]}`);
+  });
+
+  console.log(log.join("\n"));
+  console.log();
 }
 
 /**
