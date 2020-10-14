@@ -12,6 +12,7 @@
   "exclude": [
     "node_modules",
     "src/test",
-    "src/setupTests.ts"
+    "src/setupTests.ts",
+    "src/**/*.dev.ts"
   ]
 }
