@@ -37,6 +37,8 @@ create `mapineda.json` in project root
 
 ## react-scripts
 
+Minimal overwrite react-scripts config without eject.
+
 Before use it you should do bootstrapping with [Create React App](https://github.com/facebook/create-react-app).
 
 ### start

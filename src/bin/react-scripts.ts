@@ -26,14 +26,6 @@ require(src.env);
 
 const config = readConfig()["react-scripts"];
 
-let appIndexJs = paths.appIndexJs;
-
-if (config?.entry) {
-  const entry = config.entry;
-
-  appIndexJs = path.resolve(entry);
-}
-
 const start = parseStart();
 
 const build = parseBuild();
@@ -132,9 +124,15 @@ function parseStart() {
     return { appIndexJs: path.resolve(entry) };
   }
 
-  return { appIndexJs };
+  return {};
 }
 
+/**
+ * Update paths in cache with input
+ * https://nodejs.org/api/modules.html#modules_require_cache
+ * @param _paths object
+ * https://github.com/facebook/create-react-app/blob/6a51dcdfb84d1a47294fcbf9d7d569eaf1b4d571/packages/react-scripts/config/paths.js#L60
+ */
 function overwritePaths(_paths: any) {
   const log = ["Overwrite paths\n"];
 
