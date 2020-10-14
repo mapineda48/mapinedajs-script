@@ -1,0 +1,63 @@
+{
+  "name": "mapineda-script",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Miguel Angel Pineda Vega",
+  "license": "MIT",
+  "homepage": "https://github.com/mapineda48/mapinedajs-script#readme",
+  "bugs": {
+    "url": "https://github.com/mapineda48/mapinedajs-script/issues"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": "^12.18.3",
+    "yarn": "^1.22.5"
+  },
+  "dependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/fs-extra": "^9.0.2",
+    "@types/jest": "^24.0.0",
+    "@types/node": "^12.0.0",
+    "@types/react": "^16.9.0",
+    "@types/react-dom": "^16.9.0",
+    "fs-extra": "^9.0.1",
+    "nodemon": "^2.0.5",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.3",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "ts-node -P tsconfig.dist.json src/bin/index.ts",
+    "build": "tsc -P tsconfig.dist.json",
+    "react-scripts": "ts-node -P tsconfig.dist.json src/bin/react.dev.ts",
+    "publish:it": "ts-node -P tsconfig.dist.json src/bin/publish.ts",
+    "pack:it": "ts-node -P tsconfig.dist.json src/bin/publish.ts --pack"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "nodemonConfig": {
+    "execMap": {
+      "ts": "ts-node -P tsconfig.dist.json"
+    }
+  }
+}

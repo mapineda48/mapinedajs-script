@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2018",
+    "lib": [
+      "ESNext"
+    ],
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "noEmit": false
+  },
+  "exclude": [
+    "node_modules",
+    "src/test",
+    "src/setupTests.ts"
+  ]
+}

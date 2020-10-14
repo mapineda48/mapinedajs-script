@@ -1,0 +1,33 @@
+{
+  "react-scripts": {
+    "entry": "src/test/react-scripts/index.tsx",
+    "build": "build/index",
+    "apps": [
+      {
+        "entry": "src/test/react-scripts/index.tsx",
+        "build": "build/index"
+      },
+      {
+        "entry": "src/test/react-scripts/foo.tsx",
+        "build": "build/foo"
+      }
+    ]
+  },
+  "publish": {
+    "package": {
+      "bin": {
+        "mapineda-script": "./bin/index.js"
+      },
+      "peerDependencies": {
+        "react-scripts": "3.x"
+      },
+      "dependencies": {
+        "fs-extra": "^9.0.1"
+      }
+    },
+    "files": [
+      "README.md"
+    ],
+    "trashs": []
+  }
+}
