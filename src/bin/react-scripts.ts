@@ -139,7 +139,7 @@ function parseStart() {
  * https://github.com/facebook/create-react-app/blob/6a51dcdfb84d1a47294fcbf9d7d569eaf1b4d571/packages/react-scripts/config/paths.js#L60
  */
 function overwritePaths(_paths: PathsArg) {
-  logPaths(_paths);
+  //logPaths(_paths);
 
   const current = require.cache[src.paths];
 
