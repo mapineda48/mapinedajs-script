@@ -3,7 +3,6 @@ import path from "./path";
 
 export function readConfig(key?: string) {
   if (!fs.existsSync(path.config)) {
-    console.log("missing mapineda.json");
     return {};
   }
 

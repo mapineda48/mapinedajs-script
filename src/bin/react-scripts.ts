@@ -83,7 +83,7 @@ function parseBuild() {
 
   const publicUrlOrPath = "--publicUrlOrPath";
 
-  const isCustom = existsInLine(entry) && existsInLine(build);
+  const isCustom = existsInLine(entry) || existsInLine(build);
 
   if (!isCustom) {
     if (config?.entry) {
@@ -98,10 +98,13 @@ function parseBuild() {
       paths.publicUrlOrPath = config.publicUrlOrPath;
     }
   } else {
-    paths.appIndexJs = path.resolve(findValue(entry));
+    if (existsInLine(entry)) {
+      paths.appIndexJs = path.resolve(findValue(entry));
+    }
 
-    paths.appBuild = path.resolve(findValue(build));
-
+    if (existsInLine(build)) {
+      paths.appBuild = path.resolve(findValue(build));
+    }
     if (existsInLine(publicUrlOrPath)) {
       paths.publicUrlOrPath = findValue(publicUrlOrPath);
     }
