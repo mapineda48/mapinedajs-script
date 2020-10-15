@@ -24,8 +24,17 @@ export function readPackage() {
   return fs.readJSONSync(path.package);
 }
 
-export function existsInLine(value: string) {
-  return process.argv.includes(value);
+export function existsInLine(value: string | string[]) {
+  if (!Array.isArray(value)) {
+    return process.argv.includes(value);
+  }
+
+  const results = value.map((v) => process.argv.includes(v));
+
+  /**
+   * its like a operator logic or
+   */
+  return results.includes(true);
 }
 
 export function findIndex(value: string) {

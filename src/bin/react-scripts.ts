@@ -51,12 +51,12 @@ if (start) {
         "build",
         "--entry",
         c.entry,
-        "--build",
-        c.build,
+        "--ouput",
+        c.ouput,
       ];
 
-      if (c.publicUrlOrPath) {
-        command.push("--publicUrlOrPath", c.publicUrlOrPath);
+      if (c.url) {
+        command.push("--url", c.url);
       }
 
       execSync(command.join(" "), { stdio: "inherit" });
@@ -79,34 +79,34 @@ function parseBuild() {
 
   const entry = "--entry";
 
-  const build = "--build";
+  const output = "--output";
 
-  const publicUrlOrPath = "--publicUrlOrPath";
+  const url = "--url";
 
-  const isCustom = existsInLine(entry) || existsInLine(build);
+  const withConfig = !existsInLine([entry, output]);
 
-  if (!isCustom) {
+  if (withConfig) {
     if (config?.entry) {
       paths.appIndexJs = path.resolve(config.entry);
     }
 
-    if (config?.build) {
-      paths.appBuild = path.resolve(config.build);
+    if (config?.ouput) {
+      paths.appBuild = path.resolve(config.ouput);
     }
 
-    if (config?.publicUrlOrPath) {
-      paths.publicUrlOrPath = config.publicUrlOrPath;
+    if (config?.url) {
+      paths.publicUrlOrPath = config.url;
     }
   } else {
     if (existsInLine(entry)) {
       paths.appIndexJs = path.resolve(findValue(entry));
     }
 
-    if (existsInLine(build)) {
-      paths.appBuild = path.resolve(findValue(build));
+    if (existsInLine(output)) {
+      paths.appBuild = path.resolve(findValue(output));
     }
-    if (existsInLine(publicUrlOrPath)) {
-      paths.publicUrlOrPath = findValue(publicUrlOrPath);
+    if (existsInLine(url)) {
+      paths.publicUrlOrPath = findValue(url);
     }
   }
 

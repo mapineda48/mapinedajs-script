@@ -3,7 +3,7 @@ import { existsInLine } from "..";
 
 const react = existsInLine("--react-scripts");
 
-const publish = existsInLine("--pack") || existsInLine("--publish");
+const publish = existsInLine(["--pack", "--publish"]);
 
 const init = existsInLine("--init");
 
