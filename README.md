@@ -16,11 +16,11 @@ create `mapineda.json` in project root
 {
   "react-scripts": {
     "entry": "my/custom/path/entry.js",
-    "build": "my/custom/path/build.js",
+    "output": "my/custom/path/build.js",
     "apps": [
       {
         "entry": "my/custom/path/entry.js",
-        "build": "my/custom/path/build.js"
+        "output": "my/custom/path/build.js"
       }
     ]
   },
@@ -46,13 +46,13 @@ Before use it you should do bootstrapping with [Create React App](https://github
 configuration entry
 
 ```shell
-yarn mapineda-script --react-scripts start
+yarn mapineda --react-scripts start
 ```
 
 argument entry
 
 ```shell
-yarn mapineda-script --react-scripts start my/path/entry.js
+yarn mapineda --react-scripts start my/path/entry.js
 ```
 
 ### build
@@ -60,19 +60,19 @@ yarn mapineda-script --react-scripts start my/path/entry.js
 configuration entry
 
 ```shell
-yarn mapineda-script --react-scripts build
+yarn mapineda --react-scripts build
 ```
 
 argument entry and argument build
 
 ```shell
-yarn mapineda-script --react-scripts build --entry my/entry.jsx --build my/build
+yarn mapineda --react-scripts build --entry my/entry.jsx --output my/build
 ```
 
 configuration apps
 
 ```shell
-yarn mapineda-script --react-scripts build --apps
+yarn mapineda --react-scripts build --apps
 ```
 
 ### pack
