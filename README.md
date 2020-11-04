@@ -1,37 +1,12 @@
-# mapineda-script
+# mapineda-react
 
 Some personal scripts for nodejs development
 
 ## Installation
 
-`$ npm install mapineda-script`
+`$ yarn add mapineda-react`
 
 **Install peer dependencies**
-
-## Configurations
-
-create `mapineda.json` in project root
-
-```json
-{
-  "react-scripts": {
-    "entry": "my/custom/path/entry.js",
-    "output": "my/custom/path/build.js",
-    "apps": [
-      {
-        "entry": "my/custom/path/entry.js",
-        "output": "my/custom/path/build.js"
-      }
-    ]
-  },
-
-  "publish": {
-    "package": {},
-    "files": ["files/should/be/add.js"],
-    "trashs": ["files/should/be/remove.js"]
-  }
-}
-```
 
 ## Usage
 
@@ -41,18 +16,32 @@ Minimal overwrite react-scripts config without eject.
 
 Before use it you should do bootstrapping with [Create React App](https://github.com/facebook/create-react-app).
 
+### Configurations
+
+set on `package.json`
+
+```json
+{
+  "react-scripts": {
+    "entry": "my/custom/path/entry.js",
+    "output": "my/custom/path/build.js",
+    "url": "my/custom/url"
+  }
+}
+```
+
 ### start
 
 configuration entry
 
 ```shell
-yarn mapineda --react-scripts start
+yarn mapineda start
 ```
 
 argument entry
 
 ```shell
-yarn mapineda --react-scripts start my/path/entry.js
+yarn mapineda start my/path/entry.js
 ```
 
 ### build
@@ -60,39 +49,37 @@ yarn mapineda --react-scripts start my/path/entry.js
 configuration entry
 
 ```shell
-yarn mapineda --react-scripts build
+yarn mapineda build
 ```
 
 argument entry and argument build
 
 ```shell
-yarn mapineda --react-scripts build --entry my/entry.jsx --output my/build
+yarn mapineda build --entry my/entry.jsx --output my/build
 ```
 
-configuration apps
-
-```shell
-yarn mapineda --react-scripts build --apps
-```
-
-### pack
+## pack or publish
 
 **Warning this is experimental**
 
-try with configurations create a final distribution package
+### Configurations
 
-```shell
-yarn mapineda-script --pack
+set on `publish.json`
+
+```json
+{
+  "package": {},
+  "files": ["files/should/be/add.js"],
+  "trashs": ["files/should/be/remove.js"]
+}
 ```
 
-### publish
-
-**Warning this is experimental**
-
-try with configurations publish a final distribution package on github
+```shell
+yarn mapineda pack
+```
 
 ```shell
-yarn mapineda-script --publish
+yarn mapineda publish
 ```
 
 ## Environment development

@@ -1,27 +1,29 @@
 import fs from "fs-extra";
 import path from "./path";
 
-export function readConfig(key?: string) {
-  if (!fs.existsSync(path.config)) {
+export function readPublish() {
+  if (!fs.existsSync(path.publish)) {
     return {};
   }
 
   try {
-    const config = fs.readJsonSync(path.config);
+    const config = fs.readJsonSync(path.publish);
 
-    if (!key) {
-      return config;
-    }
-
-    return config[key];
+    return config;
   } catch (error) {
-    console.log("invalid mapineda.json");
+    console.log("invalid publish.json");
     return {};
   }
 }
 
-export function readPackage() {
-  return fs.readJSONSync(path.package);
+export function readPackage(key = "") {
+  const json = fs.readJSONSync(path.package);
+
+  if (!key) {
+    return json;
+  }
+
+  return json[key];
 }
 
 export function existsInLine(value: string | string[]) {

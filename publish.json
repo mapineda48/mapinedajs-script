@@ -1,0 +1,18 @@
+{
+  "package": {
+    "homepage": "https://github.com/mapineda48/mapineda-react#readme",
+    "bin": {
+      "mapineda": "./bin/index.js"
+    },
+    "peerDependencies": {
+      "react-scripts": "3.x"
+    },
+    "dependencies": {
+      "fs-extra": "^9.0.1"
+    }
+  },
+  "files": [
+    "README.md"
+  ],
+  "trashs": []
+}

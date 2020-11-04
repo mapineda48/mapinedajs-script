@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import { execSync } from "child_process";
-import { readConfig, readPackage, existsInLine } from "..";
+import { readPublish, readPackage, existsInLine } from "..";
 
 /**
  * https://github.com/features/packages
@@ -19,7 +19,7 @@ const finalJson = path.resolve(dist, "package.json");
 
 const pckg = readPackage();
 
-const config = readConfig();
+const config = readPublish();
 
 const {
   scripts: { build },
@@ -54,8 +54,8 @@ finalPckg.bugs = pckg.bugs || {};
 finalPckg.publishConfig = pckg.publishConfig || {};
 finalPckg.engines = pckg.engines || {};
 
-if (config?.publish?.package) {
-  finalPckg = { ...finalPckg, ...config.publish.package };
+if (config?.package) {
+  finalPckg = { ...finalPckg, ...config.package };
 }
 
 fs.outputJSONSync(finalJson, finalPckg);
@@ -63,8 +63,8 @@ fs.outputJSONSync(finalJson, finalPckg);
 /**
  *  Copy Files
  */
-if (config?.publish?.files) {
-  const files = config.publish.files;
+if (config?.files) {
+  const files = config.files;
 
   files.forEach((file: any) => {
     const src = path.resolve(file);
@@ -74,8 +74,8 @@ if (config?.publish?.files) {
   });
 }
 
-if (config?.publish?.trashs) {
-  const trashs = config.publish.trashs;
+if (config?.trashs) {
+  const trashs = config.trashs;
 
   trashs.forEach((file: any) => {
     const src = path.resolve(file);
@@ -88,7 +88,7 @@ if (config?.publish?.trashs) {
  * Only pack packages
  * https://docs.npmjs.com/cli-commands/pack.html
  */
-if (existsInLine("--pack")) {
+if (existsInLine("pack")) {
   execIt("npm pack", { cwd: dist });
   process.exit();
 }
