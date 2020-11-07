@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import { execSync } from "child_process";
-import { readPublish, readPackage, existsInLine } from "..";
+import { readPublish, readPackage, existsInLine } from "../..";
 
 /**
  * https://github.com/features/packages
@@ -12,6 +12,8 @@ import { readPublish, readPackage, existsInLine } from "..";
  * npm / yarn
  */
 const root = path.resolve();
+
+const source = path.resolve("src");
 
 const dist = path.resolve("dist");
 
@@ -68,9 +70,11 @@ if (config?.files) {
 
   files.forEach((file: any) => {
     const src = path.resolve(file);
-    const dest = src.replace(root, dist);
+    const dest = src.includes(source)
+      ? src.replace(source, dist)
+      : src.replace(root, dist);
 
-    fs.copySync(src, dest);
+    fs.copySync(src, dest, { overwrite: true });
   });
 }
 

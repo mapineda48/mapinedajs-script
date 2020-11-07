@@ -12,7 +12,10 @@
     }
   },
   "files": [
-    "README.md"
+    "README.md",
+    "src/scripts/prepare/public",
+    "src/scripts/prepare/package.json",
+    "src/scripts/prepare/tsconfig.json"
   ],
   "trashs": []
 }

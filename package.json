@@ -28,6 +28,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
+    "sass": "^1.29.0",
     "ts-node": "^9.0.0",
     "typescript": "~3.7.2"
   },
@@ -35,6 +36,7 @@
   "scripts": {
     "script": "ts-node -P tsconfig.dist.json src/bin/index.ts",
     "build": "tsc -P tsconfig.dist.json",
+    "ts-node": "ts-node -P tsconfig.dist.json",
     "publish:it": "ts-node -P tsconfig.dist.json src/bin/index.ts publish",
     "pack:it": "ts-node -P tsconfig.dist.json src/bin/index.ts pack"
   },

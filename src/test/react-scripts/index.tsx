@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+import style from "./index.module.scss";
+
 function HelloWorld() {
-  return <div>Hello World!!!</div>;
+  return <div className={style._}>Hello World!!!</div>;
 }
 
 ReactDOM.render(
