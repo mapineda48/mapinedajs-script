@@ -39,5 +39,5 @@ Object.values(paths.prepare.cra).forEach((path) => {
 });
 
 console.log(
-  "the json package has been populated with default config, install dependencies again"
+  "Your package.json has been populated with default values."
 );
