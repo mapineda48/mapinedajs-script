@@ -1,16 +1,14 @@
+import fs from "fs-extra";
 import path from "path";
 import root from "../../path";
 
-const prepare = {
-  package: resolve("package.json"),
-  cra: {
-    tsconfig: resolve("tsconfig.json"),
-    public: resolve("public"),
-  },
-};
+const templates = fs
+  .readdirSync(resolve("template"))
+  .map((file) => resolve("template", file));
 
 export default {
-  prepare,
+  templates,
+  template: resolve("template"),
   root,
 };
 

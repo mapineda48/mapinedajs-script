@@ -14,7 +14,18 @@
     "node": "^12.18.3",
     "yarn": "^1.22.5"
   },
+  "scripts": {
+    "script": "ts-node -P tsconfig.dist.json src/bin/index.ts",
+    "build": "tsc -P tsconfig.dist.json && yarn tasks",
+    "ts-node": "ts-node -P tsconfig.dist.json",
+    "publish:it": "ts-node -P tsconfig.dist.json src/bin/index.ts publish",
+    "pack:it": "ts-node -P tsconfig.dist.json src/bin/index.ts pack",
+    "tasks":"ts-node -P tsconfig.dist.json tasks/index.ts"
+  },
   "dependencies": {
+    "fs-extra": "^9.0.1"
+  },
+  "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
@@ -23,7 +34,6 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
-    "fs-extra": "^9.0.1",
     "nodemon": "^2.0.5",
     "react": "16.14.0",
     "react-dom": "16.14.0",
@@ -32,13 +42,8 @@
     "ts-node": "^9.0.0",
     "typescript": "3.8.3"
   },
-  "devDependencies": {},
-  "scripts": {
-    "script": "ts-node -P tsconfig.dist.json src/bin/index.ts",
-    "build": "tsc -P tsconfig.dist.json",
-    "ts-node": "ts-node -P tsconfig.dist.json",
-    "publish:it": "ts-node -P tsconfig.dist.json src/bin/index.ts publish",
-    "pack:it": "ts-node -P tsconfig.dist.json src/bin/index.ts pack"
+  "peerDependencies": {
+    "react-scripts": "3.x"
   },
   "eslintConfig": {
     "extends": "react-app"
