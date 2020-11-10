@@ -1,13 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
 
-// const files = [
-//   "README.md",
-//   "src/scripts/prepare/public",
-//   "src/scripts/prepare/package.json",
-//   "src/scripts/prepare/tsconfig.json",
-// ];
-
 const files: File[] = [];
 
 files.push({
