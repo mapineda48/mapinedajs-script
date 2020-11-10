@@ -16,6 +16,16 @@ files.push({
 });
 
 files.push({
+  src: ".env",
+  dest: "dist/scripts/prepare/template/env",
+});
+
+files.push({
+  src: ".gitignore",
+  dest: "dist/scripts/prepare/template/gitignore",
+});
+
+files.push({
   src: "package.json",
   dest: "dist/scripts/prepare/package.json",
 });

@@ -47,4 +47,9 @@ paths.templates.forEach((path) => {
   fs.copySync(path, dest, { overwrite: true });
 });
 
+fs.moveSync(paths.env.src, paths.env.dest);
+
+fs.moveSync(paths.gitignore.src, paths.gitignore.dest);
+
+
 console.log("Your package.json has been populated with default values.");

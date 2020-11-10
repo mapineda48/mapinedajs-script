@@ -1,6 +1,6 @@
 # mapineda-react
 
-Some personal scripts for nodejs development
+some personal tools.
 
 ## Installation
 
@@ -58,29 +58,6 @@ argument entry and argument build
 yarn mapineda build --entry my/entry.jsx --output my/build
 ```
 
-## pack or publish
-
-**Warning this is experimental**
-
-### Configurations
-
-set on `publish.json`
-
-```json
-{
-  "package": {},
-  "files": ["files/should/be/add.js"],
-  "trashs": ["files/should/be/remove.js"]
-}
-```
-
-```shell
-yarn mapineda pack
-```
-
-```shell
-yarn mapineda publish
-```
 
 ## Environment development
 
