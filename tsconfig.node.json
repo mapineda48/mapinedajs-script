@@ -3,14 +3,11 @@
   "compilerOptions": {
     "target": "ES2018",
     "module": "CommonJS",
-    "outDir": "./dist",
+    "outDir": "./dist/bin",
     "noEmit": false,
     "declaration": true
   },
-  "exclude": [
-    "node_modules",
-    "src/__test__",
-    "src/setupTests.ts",
-    "src/**/*.dev.ts"
+  "include": [
+    "src/bin"
   ]
 }
