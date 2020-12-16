@@ -88,9 +88,10 @@ type Thunk<T, A> = A extends Action<infer R, infer S>
   ? {
       [K in keyof T]: T[K] extends (
         action: Action<R, S>,
-        state: S
+        state: S,
+        ...args: infer E
       ) => Promise<infer F>
-        ? () => Promise<F>
+        ? (...args: E) => Promise<F>
         : never;
     }
   : never;
