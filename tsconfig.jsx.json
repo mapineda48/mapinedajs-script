@@ -12,6 +12,7 @@
         "src/app",
         "src/setupTests.ts",
         "src/reportWebVitals.ts",
+        "src/setState/state",
         "src/**/*.dev.ts",
         "src/**/*.dev.tsx"
     ]

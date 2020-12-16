@@ -1,23 +1,11 @@
 import React from "react";
 
-  /**
-   * Warning that this is experimental
-   */
+/**
+ * Warning that this is experimental
+ */
 
 const createAction: Create = (setState, reducer: any) => {
-  /**
-   * it is possible to lose the current state
-   */
-  function getState(): any {
-    return new Promise((resolve, reject) => {
-      setState((state) => {
-        resolve(state);
-        return state;
-      });
-    });
-  }
-
-  const result: any = { getState };
+  const result: any = {};
 
   Object.keys(reducer).forEach((key) => {
     const value: Function = reducer[key];
@@ -32,22 +20,49 @@ const createAction: Create = (setState, reducer: any) => {
   return result;
 };
 
-const createThunk: CreateThunk = (action, reducer: any) => {
+const createThunk: CreateThunk = (setState, action, reducer: any) => {
   const result: any = {};
 
+  /**
+   * check every thunk
+   */
   Object.keys(reducer).forEach((key) => {
     const value: Function = reducer[key];
 
     if (typeof value !== "function") return;
 
-    result[key] = (...args: any[]) => value.call(null, action, ...args);
+    result[key] = (...args: any[]) =>
+      /**
+       *setState is async, create Promise to handler the result and error of current thunk
+       */
+      new Promise((res, rej) => {
+        setState((state: any) => {
+          /**
+           * maybe i should check if the current function is a promise, it's possible crash here
+           */
+          try {
+            value
+              .call(null, action, state, ...args)
+              .then(res)
+              .catch(rej);
+          } catch (error) {
+            rej(error);
+          }
+
+          return state;
+        });
+      });
   });
 
   return result;
 };
 
-export const useThunk: CreateThunk = (action, reducer) => {
-  return React.useMemo(() => createThunk(action, reducer), [action, reducer]);
+export const useThunk: CreateThunk = (setState, action, reducer) => {
+  return React.useMemo(() => createThunk(setState, action, reducer), [
+    setState,
+    action,
+    reducer,
+  ]);
 };
 
 export const useAction: Create = (setState, reducer) => {
@@ -67,22 +82,26 @@ type Action<T, S> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
     ? (...args: A) => void
     : never;
-} & {
-  readonly getState: () => Promise<S>;
 };
 
-type Thunk<T, A> = {
-  readonly [K in keyof T]: T[K] extends (
-    action: A,
-    ...args: infer A
-  ) => Promise<infer B>
-    ? (...args: A) => Promise<B>
-    : never;
-};
+type Thunk<T, A> = A extends Action<infer R, infer S>
+  ? {
+      [K in keyof T]: T[K] extends (
+        action: Action<R, S>,
+        state: S
+      ) => Promise<infer F>
+        ? () => Promise<F>
+        : never;
+    }
+  : never;
 
 type Create = <T, R>(
   setState: React.Dispatch<React.SetStateAction<T>>,
   reducer: R
 ) => Action<R, T>;
 
-type CreateThunk = <A, T>(action: A, reducer: T) => Thunk<T, A>;
+type CreateThunk = <A, T>(
+  setState: React.Dispatch<React.SetStateAction<any>>,
+  action: A,
+  reducer: T
+) => Thunk<T, A>;
