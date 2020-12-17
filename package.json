@@ -36,8 +36,7 @@
     "start": "ts-node -P tsconfig.node.json src/bin/index.ts start",
     "build:bin": "tsc -P tsconfig.node.json",
     "build:jsx": "tsc -P tsconfig.jsx.json",
-    "build": "yarn build:bin && yarn build:jsx",
-    "prod": "yarn build && yarn tasks",
+    "build": "yarn build:bin && yarn build:jsx && yarn tasks",
     "test": "react-scripts test",
     "tasks": "ts-node -P tsconfig.node.json tasks/index.ts"
   },
