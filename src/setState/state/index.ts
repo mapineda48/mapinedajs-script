@@ -1,7 +1,7 @@
 import React from "react";
-import { useAction, useThunk } from "..";
+import useAction from "..";
 import * as reducer from "./reducer";
-import * as thunk from "./thunk";
+import * as reducerAsync from "./thunk";
 import { Colombia, Record } from "./sigma";
 import * as type from "./type";
 
@@ -27,15 +27,13 @@ function create(): State {
 export function useSigmaRoot() {
   const [state, setState] = React.useState(create);
 
-  const sigma = useAction(setState, reducer);
-
-  const _thunk = useThunk(setState, sigma, thunk);
+  const [sigma, thunk] = useAction(setState, reducer, reducerAsync);
 
   if (!state.colombia && !state.isLoading) {
-    _thunk.fetchColombia();
+    thunk.fetchColombia();
   }
 
-  return [state, sigma, _thunk] as const;
+  return [state, sigma, thunk] as const;
 }
 
 const value: any = null;

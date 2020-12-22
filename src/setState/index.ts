@@ -4,7 +4,7 @@ import React from "react";
  * Warning that this is experimental
  */
 
-const createAction: Create = (setState, reducer: any) => {
+export const createAction: CreateAction = (setState, reducer: any) => {
   const result: any = {};
 
   Object.keys(reducer).forEach((key) => {
@@ -20,7 +20,7 @@ const createAction: Create = (setState, reducer: any) => {
   return result;
 };
 
-const createThunk: CreateThunk = (setState, action, reducer: any) => {
+export const createThunk: CreateThunk = (setState, action, reducer: any) => {
   const result: any = {};
 
   /**
@@ -33,7 +33,9 @@ const createThunk: CreateThunk = (setState, action, reducer: any) => {
 
     result[key] = (...args: any[]) =>
       /**
-       *setState is async, create Promise to handler the result and error of current thunk
+       * I am using setState to get current state when I call async action, 
+       * return current state without any change, create promise to handle 
+       * result or error because setState is asynchronous.
        */
       new Promise((res, rej) => {
         setState((state: any) => {
@@ -57,20 +59,32 @@ const createThunk: CreateThunk = (setState, action, reducer: any) => {
   return result;
 };
 
-export const useThunk: CreateThunk = (setState, action, reducer) => {
-  return React.useMemo(() => createThunk(setState, action, reducer), [
-    setState,
-    action,
-    reducer,
-  ]);
+export const create: any = (setState: any, reducer: any, thunk: any) => {
+  const action = createAction(setState, reducer);
+
+  if (!thunk) {
+    return action;
+  }
+
+  const asyncAction = createThunk(setState, action, thunk);
+
+  return [action, asyncAction] as const;
 };
 
-export const useAction: Create = (setState, reducer) => {
-  return React.useMemo(() => createAction(setState, reducer), [
-    setState,
-    reducer,
-  ]);
-};
+/**
+ * Returns an action and thunk with memorized setState
+ *
+ * Warning!!! this is experimental
+ *
+ * @param setState setState is used as dispatch (redux inspiration)
+ * @param reducer sync actions reducer statse
+ * @param thunk async actions reducer state
+ */
+export const useAction: Create = ((setState: any, reducer: any, thunk: any) => {
+  return React.useMemo(() => {
+    return create(setState, reducer, thunk);
+  }, [setState, reducer, thunk]);
+}) as any;
 
 export default useAction;
 
@@ -96,13 +110,25 @@ type Thunk<T, A> = A extends Action<infer R, infer S>
     }
   : never;
 
-type Create = <T, R>(
+type CreateAction = <T, R, A = Action<R, T>>(
   setState: React.Dispatch<React.SetStateAction<T>>,
   reducer: R
-) => Action<R, T>;
+) => A;
 
 type CreateThunk = <A, T>(
   setState: React.Dispatch<React.SetStateAction<any>>,
   action: A,
   reducer: T
 ) => Thunk<T, A>;
+
+export interface Create {
+  <T, R, A = Action<R, T>>(
+    setState: React.Dispatch<React.SetStateAction<T>>,
+    reducer: R
+  ): A;
+  <T, R, TH, A = Action<R, T>>(
+    setState: React.Dispatch<React.SetStateAction<T>>,
+    reducer: R,
+    thunk: TH
+  ): [A, Thunk<TH, A>];
+}
