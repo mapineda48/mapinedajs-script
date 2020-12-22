@@ -1,15 +1,29 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { createPopper as createCorePopper, Options } from "@popperjs/core";
+import {
+  createPopper as createCorePopper,
+  Options,
+  Instance,
+} from "@popperjs/core";
+
+const enabledEvent = {
+  clickTarget: "click-target",
+  enterTarget: "enter-target",
+} as const;
+
+const disabledEvent = {
+  leaveTarget: "leave-target",
+} as const;
 
 function useEvent(popper: CB, current?: CB) {
-  return React.useCallback(
-    (event) => {
+  return React.useMemo(() => {
+    if (!current) return popper;
+
+    return (event: any) => {
       popper(event);
-      if (current) current(event);
-    },
-    [popper, current]
-  );
+      current(event);
+    };
+  }, [popper, current]);
 }
 
 /**
@@ -18,11 +32,13 @@ function useEvent(popper: CB, current?: CB) {
 
 export const Popper: Component = (_props) => {
   const {
+    auto,
+    enabled,
+    enabledOn,
+    disabledOn,
     portal,
-    enabled = "auto",
     Content,
     children,
-    onClickClose = false,
     ...rest
   } = _props;
 
@@ -37,7 +53,7 @@ export const Popper: Component = (_props) => {
    * https://reactjs.org/docs/forwarding-refs.html
    */
   if (typeof type !== "string") {
-    throw new Error("react component type (a class or a function) unsupported");
+    throw new Error("react component type (class or function) unsupported");
   }
 
   const target = React.useRef<HTMLElement>(null);
@@ -50,14 +66,18 @@ export const Popper: Component = (_props) => {
 
   const [active, setActive] = React.useState(false);
 
-  const isEnabled = typeof enabled === "boolean" ? enabled : active;
+  const isAuto = auto !== undefined;
+
+  const isManual = enabled !== undefined;
+
+  const isEnabled = isManual ? enabled : active;
 
   React.useEffect(() => {
     if (!target.current || !popper.current || !isEnabled) {
       return;
     }
 
-    const instance = createCorePopper(
+    let instance = createCorePopper(
       target.current,
       popper.current,
       options.current
@@ -68,16 +88,27 @@ export const Popper: Component = (_props) => {
      */
     popper.current.style.display = "";
 
-    if (cb.current) cb.current(popper.current, target.current);
+    /**
+     * Now must be call effect
+     */
+    let effect: () => void;
 
-    return () => instance.destroy();
+    if (cb.current) {
+      effect = cb.current(instance);
+    }
+
+    return () => {
+      if (effect) effect();
+      instance.destroy();
+      instance = null as any;
+    };
   });
 
   const show = React.useCallback(() => setActive(true), []);
 
   const hidden = React.useCallback(() => setActive(false), []);
 
-  const afterWrite = React.useCallback((callback: CallBackEffect) => {
+  const afterWrite = React.useCallback((callback: CBEffect) => {
     cb.current = callback;
   }, []);
 
@@ -96,36 +127,56 @@ export const Popper: Component = (_props) => {
     (popper as any).current = ref;
   }, []);
 
-  const click = React.useCallback(({ target }: any) => {
-    if (popper.current?.contains(target)) setActive(false);
-  }, []);
+  /**
+   * Events Handler
+   */
 
+  const onClick = useEvent(show, props.onClick);
   const onMouseEnter = useEvent(show, props.onMouseOver);
   const onMouseLeave = useEvent(hidden, props.onMouseOut);
   const onTouchStart = useEvent(show, props.onFocus);
-  const onClick = useEvent(click, props.onClick);
+
+  let _event: any = {};
+
+  if (!isManual) {
+    if (isAuto) {
+      _event = { onMouseEnter, onMouseLeave, onTouchStart };
+    } else {
+      switch (enabledOn) {
+        case enabledEvent.clickTarget: {
+          _event.onClick = onClick;
+          break;
+        }
+        case enabledEvent.enterTarget: {
+          _event.onMouseEnter = onMouseEnter;
+          break;
+        }
+
+        default:
+          break;
+      }
+      switch (disabledOn) {
+        case disabledEvent.leaveTarget: {
+          _event.onMouseLeave = onMouseLeave;
+          break;
+        }
+
+        default:
+          break;
+      }
+    }
+  }
+
+  /**
+   * Create new instance target
+   */
 
   let propsTarget: any = {
     ...props,
+    ..._event,
     key: props?.key || "_target",
     ref: target,
   };
-
-  if (enabled === "auto") {
-    propsTarget = {
-      ...propsTarget,
-      onMouseEnter,
-      onMouseLeave,
-      onTouchStart,
-    };
-
-    if (onClickClose) {
-      propsTarget = {
-        ...propsTarget,
-        onClick,
-      };
-    }
-  }
 
   const Target = React.createElement(type, propsTarget);
 
@@ -133,16 +184,14 @@ export const Popper: Component = (_props) => {
     return Target;
   }
 
-  const propsPopper = {
+  const Popper = React.createElement(Content, {
     ...rest,
     key: (rest as any).key || "_popper",
     popper: setPopper,
     afterWrite,
     setOptions,
-    closeIt: hidden,
-  };
-
-  const Popper = React.createElement(Content, propsPopper);
+    close: hidden,
+  });
 
   if (portal) {
     return React.createElement(React.Fragment, null, [
@@ -168,7 +217,7 @@ export const Popper: Component = (_props) => {
 };
 
 export const createPopper: Creator = (Content: any) => {
-  return (props: any) => {
+  return function CreatePopper(props: any) {
     return React.createElement(Popper, { ...props, Content });
   };
 };
@@ -179,23 +228,25 @@ export default Popper;
  * Types
  */
 
-type CallBackEffect = (popper: HTMLElement, target: HTMLElement) => void;
+type CBEffect = (instance: Instance) => void | (() => void);
 
 type Opt = Partial<Options>;
 
 export interface PropsContent {
   popper: (ref: HTMLElement | null) => void;
   setOptions: (options: Opt) => void;
-  closeIt: () => void;
-  afterWrite: (cb: CallBackEffect) => void;
+  close: () => void;
+  afterWrite: (cb: CBEffect) => void;
 }
 
-type EnabledPopper = boolean | "auto";
+type GetType<T> = T[keyof T];
 
 interface Props {
+  auto?: boolean;
+  enabled?: boolean;
   portal?: boolean;
-  enabled?: EnabledPopper;
-  onClickClose?: boolean;
+  enabledOn?: GetType<typeof enabledEvent>;
+  disabledOn?: GetType<typeof disabledEvent>;
   Content: (props: PropsContent) => JSX.Element | null;
   children: React.ReactNode;
 }
