@@ -33,8 +33,8 @@ export const createThunk: CreateThunk = (setState, action, reducer: any) => {
 
     result[key] = (...args: any[]) =>
       /**
-       * I am using setState to get current state when I call async action, 
-       * return current state without any change, create promise to handle 
+       * I am using setState to get current state when I call async action,
+       * return current state without any change, create promise to handle
        * result or error because setState is asynchronous.
        */
       new Promise((res, rej) => {
@@ -59,7 +59,7 @@ export const createThunk: CreateThunk = (setState, action, reducer: any) => {
   return result;
 };
 
-export const create: any = (setState: any, reducer: any, thunk: any) => {
+export const create: Create = ((setState: any, reducer: any, thunk: any) => {
   const action = createAction(setState, reducer);
 
   if (!thunk) {
@@ -69,7 +69,7 @@ export const create: any = (setState: any, reducer: any, thunk: any) => {
   const asyncAction = createThunk(setState, action, thunk);
 
   return [action, asyncAction] as const;
-};
+}) as any;
 
 /**
  * Returns an action and thunk with memorized setState

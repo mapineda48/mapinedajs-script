@@ -37,6 +37,7 @@ export const Popper: Component = (_props) => {
     enabledOn,
     disabledOn,
     portal,
+    options,
     Content,
     children,
     ...rest
@@ -60,10 +61,6 @@ export const Popper: Component = (_props) => {
 
   const popper = React.useRef<HTMLElement>(null);
 
-  const options = React.useRef<Partial<Options>>({});
-
-  const cb = React.useRef<any>(null);
-
   const [active, setActive] = React.useState(false);
 
   const isAuto = auto !== undefined;
@@ -77,28 +74,14 @@ export const Popper: Component = (_props) => {
       return;
     }
 
-    let instance = createCorePopper(
-      target.current,
-      popper.current,
-      options.current
-    );
+    let instance = createCorePopper(target.current, popper.current, options);
 
     /**
      * all ready to display the popper
      */
     popper.current.style.display = "";
 
-    /**
-     * Now must be call effect
-     */
-    let effect: () => void;
-
-    if (cb.current) {
-      effect = cb.current(instance);
-    }
-
     return () => {
-      if (effect) effect();
       instance.destroy();
       instance = null as any;
     };
@@ -107,14 +90,6 @@ export const Popper: Component = (_props) => {
   const show = React.useCallback(() => setActive(true), []);
 
   const hidden = React.useCallback(() => setActive(false), []);
-
-  const afterWrite = React.useCallback((callback: CBEffect) => {
-    cb.current = callback;
-  }, []);
-
-  const setOptions = React.useCallback((opt: Opt) => {
-    options.current = opt;
-  }, []);
 
   const setPopper = React.useCallback((ref: HTMLElement | null) => {
     if (!ref) return;
@@ -188,8 +163,6 @@ export const Popper: Component = (_props) => {
     ...rest,
     key: (rest as any).key || "_popper",
     popper: setPopper,
-    afterWrite,
-    setOptions,
     close: hidden,
   });
 
@@ -217,9 +190,21 @@ export const Popper: Component = (_props) => {
 };
 
 export const createPopper: Creator = (Content: any) => {
-  return function CreatePopper(props: any) {
-    return React.createElement(Popper, { ...props, Content });
+  let _options: Opt;
+
+  const Current = function CreatePopper(props: any) {
+    return React.createElement(Popper, {
+      ...props,
+      Content,
+      options: _options,
+    });
   };
+
+  Current.options = (options: Opt) => {
+    _options = options;
+  };
+
+  return Current;
 };
 
 export default Popper;
@@ -228,18 +213,14 @@ export default Popper;
  * Types
  */
 
-type CBEffect = (instance: Instance) => void | (() => void);
-
 type Opt = Partial<Options>;
+
+type GetType<T> = T[keyof T];
 
 export interface PropsContent {
   popper: (ref: HTMLElement | null) => void;
-  setOptions: (options: Opt) => void;
   close: () => void;
-  afterWrite: (cb: CBEffect) => void;
 }
-
-type GetType<T> = T[keyof T];
 
 interface Props {
   auto?: boolean;
@@ -247,18 +228,24 @@ interface Props {
   portal?: boolean;
   enabledOn?: GetType<typeof enabledEvent>;
   disabledOn?: GetType<typeof disabledEvent>;
+  options?: Partial<Options>;
   Content: (props: PropsContent) => JSX.Element | null;
   children: React.ReactNode;
 }
 
 type Component = (props: Props) => JSX.Element | null;
 
+type PipeProps = Omit<Props, "Content">;
+
 type PropsPopper<T> = keyof Omit<T, keyof PropsContent> extends never
-  ? Omit<Props, "Content">
-  : Omit<Props, "Content"> & Omit<T, keyof PropsContent>;
+  ? PipeProps
+  : PipeProps & Omit<T, keyof PropsContent>;
 
 type Creator = <C extends PropsContent>(
   Content: (props: C) => JSX.Element | null
-) => (props: PropsPopper<C>) => JSX.Element | null;
+) => {
+  (props: PropsPopper<C>): JSX.Element | null;
+  options: (options: Opt) => void;
+};
 
 type CB = (...args: any) => void;
