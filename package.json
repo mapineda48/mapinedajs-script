@@ -39,6 +39,7 @@
     "build:jsx": "tsc -P tsconfig.jsx.json",
     "build": "yarn build:bin && yarn build:jsx && yarn tasks",
     "test": "react-scripts test",
+    "ts":"ts-node -P tsconfig.node.json",
     "tasks": "ts-node -P tsconfig.node.json tasks/index.ts"
   },
   "eslintConfig": {

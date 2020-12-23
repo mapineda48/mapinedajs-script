@@ -18,3 +18,9 @@ export function colombia(state: State, colombia: Colombia): State {
     colombia: { ...colombia },
   };
 }
+
+export const foo = {
+  loading(state: State): State {
+    return state;
+  },
+};

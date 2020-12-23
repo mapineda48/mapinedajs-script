@@ -20,3 +20,9 @@ export async function fetchColombia(sigma: Action, state: State) {
     sigma.notify(error.message);
   }
 }
+
+export const bar = {
+  fetch(sigma: Action, state: State) {
+    return Promise.resolve();
+  },
+};

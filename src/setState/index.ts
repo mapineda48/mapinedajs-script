@@ -1,20 +1,21 @@
 import React from "react";
 
-/**
- * Warning that this is experimental
- */
-
 export const createAction: CreateAction = (setState, reducer: any) => {
   const result: any = {};
 
   Object.keys(reducer).forEach((key) => {
-    const value: Function = reducer[key];
+    const value = reducer[key];
 
-    if (typeof value !== "function") return;
+    const isFunc = typeof value === "function";
+    const isObj = typeof value === "object";
 
-    result[key] = (...args: any[]) => {
-      return setState((state) => value.call(null, state, ...args) || state);
-    };
+    if (isFunc) {
+      result[key] = (...args: any[]) => {
+        return setState((state) => value.call(null, state, ...args) || state);
+      };
+    } else if (isObj) {
+      result[key] = createAction(setState, value);
+    }
   });
 
   return result;
@@ -27,33 +28,40 @@ export const createThunk: CreateThunk = (setState, action, reducer: any) => {
    * check every thunk
    */
   Object.keys(reducer).forEach((key) => {
-    const value: Function = reducer[key];
+    const value = reducer[key];
 
-    if (typeof value !== "function") return;
+    const isFunc = typeof value === "function";
+    const isObj = typeof value === "object";
 
-    result[key] = (...args: any[]) =>
-      /**
-       * I am using setState to get current state when I call async action,
-       * return current state without any change, create promise to handle
-       * result or error because setState is asynchronous.
-       */
-      new Promise((res, rej) => {
-        setState((state: any) => {
-          /**
-           * maybe i should check if the current function is a promise, it's possible crash here
-           */
-          try {
-            value
-              .call(null, action, state, ...args)
-              .then(res)
-              .catch(rej);
-          } catch (error) {
-            rej(error);
-          }
+    if (isFunc) {
+      result[key] = (...args: any[]) =>
+        /**
+         * I am using setState to get current state when I call async action,
+         * return current state without any change, create promise to handle
+         * result or error because setState is asynchronous.
+         */
+        new Promise((res, rej) => {
+          setState((state: any) => {
+            /**
+             * maybe i should check if the current function is a promise, it's possible crash here
+             */
+            try {
+              value
+                .call(null, action, state, ...args)
+                .then(res)
+                .catch(rej);
+            } catch (error) {
+              rej(error);
+            }
 
-          return state;
+            return state;
+          });
         });
-      });
+    }
+
+    if (isObj) {
+      result[key] = createThunk(setState, action, value);
+    }
   });
 
   return result;
@@ -95,17 +103,27 @@ export default useAction;
 type Action<T, S> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
     ? (...args: A) => void
+    : T[K] extends { [K: string]: (state: S, ...args: any[]) => S }
+    ? Action<T[K], S>
     : never;
 };
 
 type Thunk<T, A> = A extends Action<infer R, infer S>
   ? {
-      [K in keyof T]: T[K] extends (
+      readonly [K in keyof T]: T[K] extends (
         action: Action<R, S>,
         state: S,
         ...args: infer E
       ) => Promise<infer F>
         ? (...args: E) => Promise<F>
+        : T[K] extends {
+            [K: string]: (
+              action: Action<R, S>,
+              state: S,
+              ...args: any[]
+            ) => Promise<any>;
+          }
+        ? Thunk<T[K], A>
         : never;
     }
   : never;
