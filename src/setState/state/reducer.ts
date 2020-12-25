@@ -23,4 +23,14 @@ export const foo = {
   loading(state: State): State {
     return state;
   },
+  bar: {
+    loading(state: State): State {
+      return state;
+    },
+    baz: {
+      foo(state: State): State {
+        return state;
+      },
+    },
+  },
 };

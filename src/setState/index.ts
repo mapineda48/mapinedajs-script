@@ -103,7 +103,15 @@ export default useAction;
 type Action<T, S> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
     ? (...args: A) => void
-    : T[K] extends { [K: string]: (state: S, ...args: any[]) => S }
+    : T[K] extends {
+        [K: string]:
+          | ((state: S, ...args: any[]) => S)
+          | {
+              [K: string]:
+                | ((state: S, ...args: any[]) => S)
+                | { [K: string]: (state: S, ...args: any[]) => S };
+            };
+      }
     ? Action<T[K], S>
     : never;
 };
