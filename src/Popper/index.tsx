@@ -40,6 +40,7 @@ export const Popper: Component = (_props) => {
     options,
     Content,
     children,
+    afterWrite,
     ...rest
   } = _props;
 
@@ -80,6 +81,10 @@ export const Popper: Component = (_props) => {
      * all ready to display the popper
      */
     popper.current.style.display = "";
+
+    if (afterWrite) {
+      afterWrite(instance);
+    }
 
     return () => {
       instance.destroy();
@@ -222,6 +227,8 @@ export interface PropsContent {
   close: () => void;
 }
 
+type AfterWrite = (instance: Instance) => void;
+
 interface Props {
   auto?: boolean;
   enabled?: boolean;
@@ -229,6 +236,7 @@ interface Props {
   enabledOn?: GetType<typeof enabledEvent>;
   disabledOn?: GetType<typeof disabledEvent>;
   options?: Partial<Options>;
+  afterWrite?: AfterWrite;
   Content: (props: PropsContent) => JSX.Element | null;
   children: React.ReactNode;
 }
