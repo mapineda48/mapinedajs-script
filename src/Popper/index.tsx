@@ -90,7 +90,7 @@ export const Popper: Component = (_props) => {
       instance.destroy();
       instance = null as any;
     };
-  },[isEnabled, onDisplay, options]);
+  }, [isEnabled, onDisplay, options]);
 
   const show = React.useCallback(() => setActive(true), []);
 
@@ -217,15 +217,16 @@ export default Popper;
 /**
  * Types
  */
-
-type Opt = Partial<Options>;
-
-type GetType<T> = T[keyof T];
+export type { Instance, Options };
 
 export interface PropsContent {
   popper: (ref: HTMLElement | null) => void;
   close: () => void;
 }
+
+type Opt = Partial<Options>;
+
+type GetType<T> = T[keyof T];
 
 type OnDisplay = (instance: Instance) => void;
 
