@@ -40,7 +40,7 @@ export const Popper: Component = (_props) => {
     options,
     Content,
     children,
-    afterWrite,
+    onDisplay,
     ...rest
   } = _props;
 
@@ -82,15 +82,15 @@ export const Popper: Component = (_props) => {
      */
     popper.current.style.display = "";
 
-    if (afterWrite) {
-      afterWrite(instance);
+    if (onDisplay) {
+      onDisplay(instance);
     }
 
     return () => {
       instance.destroy();
       instance = null as any;
     };
-  });
+  },[isEnabled, onDisplay, options]);
 
   const show = React.useCallback(() => setActive(true), []);
 
@@ -227,7 +227,7 @@ export interface PropsContent {
   close: () => void;
 }
 
-type AfterWrite = (instance: Instance) => void;
+type OnDisplay = (instance: Instance) => void;
 
 interface Props {
   auto?: boolean;
@@ -236,7 +236,7 @@ interface Props {
   enabledOn?: GetType<typeof enabledEvent>;
   disabledOn?: GetType<typeof disabledEvent>;
   options?: Partial<Options>;
-  afterWrite?: AfterWrite;
+  onDisplay?: OnDisplay;
   Content: (props: PropsContent) => JSX.Element | null;
   children: React.ReactNode;
 }
