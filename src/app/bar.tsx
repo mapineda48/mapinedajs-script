@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 function App() {
-  return <div>Hello Worlds!!!</div>;
+  return <div>Hello World from bar!!!</div>;
 }
 
 ReactDOM.render(

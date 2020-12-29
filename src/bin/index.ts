@@ -2,10 +2,8 @@
 
 import fs from "fs-extra";
 import path from "path";
+import { execSync } from "child_process";
 
-/**
- * minimal overwrite react-scripts config without eject
- */
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
 const src = {
@@ -27,12 +25,26 @@ const start = parseStart();
 
 const build = parseBuild();
 
-if (start) {
+if (build) {
+  if (!Array.isArray(build)) {
+    overwritePaths(build);
+    require(src.build);
+  } else {
+    build.forEach((app) => {
+      const command = process.argv.slice(0, 2);
+
+      command.push("build");
+
+      Object.entries(app).forEach(([opt, val]) =>
+        command.push(`--${opt} ${val}`)
+      );
+
+      execSync(command.join(" "), { stdio: "inherit" });
+    });
+  }
+} else if (start) {
   overwritePaths(start);
   require(src.start);
-} else if (build) {
-  overwritePaths(build);
-  require(src.build);
 }
 
 /**
@@ -45,6 +57,12 @@ function parseBuild() {
     return;
   }
 
+  if (existsInLine("apps")) {
+    delete config.default;
+
+    return Object.values(config) as App[];
+  }
+
   const paths: PathsArg = {};
 
   const entry = "--entry";
@@ -53,21 +71,7 @@ function parseBuild() {
 
   const url = "--url";
 
-  const withConfig = !existsInLine([entry, output]);
-
-  if (withConfig) {
-    if (config?.entry) {
-      paths.appIndexJs = path.resolve(config.entry);
-    }
-
-    if (config?.output) {
-      paths.appBuild = path.resolve(config.output);
-    }
-
-    if (config?.url) {
-      paths.publicUrlOrPath = config.url;
-    }
-  } else {
+  if (existsInLine([entry, output])) {
     if (existsInLine(entry)) {
       paths.appIndexJs = path.resolve(findValue(entry));
     }
@@ -77,6 +81,38 @@ function parseBuild() {
     }
     if (existsInLine(url)) {
       paths.publicUrlOrPath = findValue(url);
+    }
+
+    return paths;
+  }
+
+  const target = findValue(script);
+
+  if (target && target !== "default") {
+    const app = config[target];
+
+    if (app) {
+      if (app?.entry) {
+        paths.appIndexJs = path.resolve(app.entry);
+      }
+      if (app?.output) {
+        paths.appBuild = path.resolve(app.output);
+      }
+      if (app?.url) {
+        paths.publicUrlOrPath = app.url;
+      }
+    }
+  } else if (config?.default) {
+    const app = config[config.default];
+
+    if (app?.entry) {
+      paths.appIndexJs = path.resolve(app.entry);
+    }
+    if (app?.output) {
+      paths.appBuild = path.resolve(app.output);
+    }
+    if (app?.url) {
+      paths.publicUrlOrPath = app.url;
     }
   }
 
@@ -92,14 +128,22 @@ function parseStart() {
 
   const paths: PathsArg = {};
 
-  if (config?.entry) {
-    paths.appIndexJs = path.resolve(config.entry);
-  }
-
   const target = findValue(script);
 
-  if (target) {
-    paths.appIndexJs = path.resolve(target);
+  if (target && target !== "default") {
+    const app = config[target];
+
+    if (app?.entry) {
+      paths.appIndexJs = path.resolve(app.entry);
+    } else {
+      paths.appIndexJs = path.resolve(target);
+    }
+  } else if (config?.default) {
+    const app = config[config.default];
+
+    if (app?.entry) {
+      paths.appIndexJs = path.resolve(app.entry);
+    }
   }
 
   return paths;
@@ -189,4 +233,10 @@ interface Paths {
   appTypeDeclarations: string;
   ownTypeDeclarations: string;
   moduleFileExtensions: string[];
+}
+
+interface App {
+  entry: string;
+  url: string;
+  output: string;
 }

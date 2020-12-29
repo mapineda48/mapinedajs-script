@@ -33,13 +33,14 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "dev:bin": "ts-node -P tsconfig.node.json src/bin/index.ts",
     "start": "ts-node -P tsconfig.node.json src/bin/index.ts start",
     "start:dist": "node dist/bin start",
     "build:bin": "tsc -P tsconfig.node.json",
     "build:jsx": "tsc -P tsconfig.jsx.json",
     "build": "yarn build:bin && yarn build:jsx && yarn tasks",
     "test": "react-scripts test",
-    "ts":"ts-node -P tsconfig.node.json",
+    "ts": "ts-node -P tsconfig.node.json",
     "tasks": "ts-node -P tsconfig.node.json tasks/index.ts"
   },
   "eslintConfig": {
@@ -66,8 +67,16 @@
     }
   },
   "react-scripts": {
-    "entry": "src/app/index.tsx",
-    "url": "./",
-    "output": "build/baz"
+    "main": {
+      "entry": "src/app/index.tsx",
+      "url": "./",
+      "output": "build"
+    },
+    "foo": {
+      "entry": "src/app/foo.tsx",
+      "url": "./",
+      "output": "build/foo"
+    },
+    "default": "main"
   }
 }

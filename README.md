@@ -23,16 +23,19 @@ set on `package.json`
 ```json
 {
   "react-scripts": {
-    "entry": "my/custom/path/entry.js",
-    "output": "my/custom/path/build.js",
-    "url": "my/custom/url"
+    "main": {
+      "entry": "my/custom/path/entry.js",
+      "output": "my/custom/path/build.js",
+      "url": "my/custom/url"
+    },
+    "default": "main"
   }
 }
 ```
 
 ### start
 
-configuration entry
+configuration default entry
 
 ```shell
 yarn mapineda start
@@ -44,12 +47,24 @@ argument entry
 yarn mapineda start my/path/entry.js
 ```
 
+argument entry alias
+
+```shell
+yarn mapineda start main
+```
+
 ### build
 
-configuration entry
+configuration default entry
 
 ```shell
 yarn mapineda build
+```
+
+argument alias
+
+```shell
+yarn mapineda build main
 ```
 
 argument entry and argument build
@@ -57,7 +72,6 @@ argument entry and argument build
 ```shell
 yarn mapineda build --entry my/entry.jsx --output my/build
 ```
-
 
 ## Environment development
 
