@@ -1,6 +1,10 @@
 import React from "react";
 
-export const createAction: CreateAction = ((setState: any, reducer: any, returnIt:any) => {
+export const createAction: CreateAction = ((
+  setState: any,
+  reducer: any,
+  returnIt: any
+) => {
   const result: any = {};
 
   const _returnIt = returnIt || result;
@@ -13,11 +17,11 @@ export const createAction: CreateAction = ((setState: any, reducer: any, returnI
 
     if (isFunc) {
       result[key] = (...args: any[]) => {
-        setState((state:any) => value.call(null, state, ...args) || state);
+        setState((state: any) => value.call(null, state, ...args) || state);
         return _returnIt;
       };
     } else if (isObj) {
-      result[key] = (createAction as any)(setState, value,result);
+      result[key] = (createAction as any)(setState, value, result);
     }
   });
 
@@ -50,7 +54,7 @@ export const createThunk: CreateThunk = (setState, action, reducer: any) => {
              */
             try {
               value
-                .call(null, action, state, ...args)
+                .call(null, [state, action], ...args)
                 .then(res)
                 .catch(rej);
             } catch (error) {
@@ -122,15 +126,13 @@ type Action<T, S, R = T> = {
 type Thunk<T, A> = A extends Action<infer R, infer S>
   ? {
       readonly [K in keyof T]: T[K] extends (
-        action: Action<R, S>,
-        state: S,
+        store: [S, Action<R, S>],
         ...args: infer E
       ) => Promise<infer F>
         ? (...args: E) => Promise<F>
         : T[K] extends {
             [K: string]: (
-              action: Action<R, S>,
-              state: S,
+              store: [S, Action<R, S>],
               ...args: any[]
             ) => Promise<any>;
           }
@@ -161,3 +163,5 @@ export interface Create {
     thunk: TH
   ): [A, Thunk<TH, A>];
 }
+
+export type SetStore<S, R> = [S, Action<R, S>];
