@@ -1,5 +1,12 @@
 import React from "react";
 
+/**
+ * ok ... what you found here is a proposal for the implementation of an alternative 
+ * to redux and useReducer, also simplifying the API (or at least that's what I try), 
+ * its use is intended for small to medium applications, which is just a project to 
+ * test what you have learned about react.
+ */
+
 export const createAction: CreateAction = ((
   setState: any,
   reducer: any,
