@@ -1,9 +1,9 @@
 import React from "react";
 
 /**
- * ok ... what you found here is a proposal for the implementation of an alternative 
- * to redux and useReducer, also simplifying the API (or at least that's what I try), 
- * its use is intended for small to medium applications, which is just a project to 
+ * ok ... what you found here is a proposal for the implementation of an alternative
+ * to redux and useReducer, also simplifying the API (or at least that's what I try),
+ * its use is intended for small to medium applications, which is just a project to
  * test what you have learned about react.
  */
 
@@ -12,7 +12,16 @@ export const createAction: CreateAction = ((
   reducer: any,
   returnIt: any
 ) => {
-  const result: any = {};
+  const result: any = (cb: any) => setState((state: any) => cb(state) || state);
+
+  result.getState = () => {
+    return new Promise((res, rej) => {
+      setState((state: any) => {
+        res(state);
+        return state;
+      });
+    });
+  };
 
   const _returnIt = returnIt || result;
 
@@ -48,29 +57,7 @@ export const createThunk: CreateThunk = (setState, action, reducer: any) => {
     const isObj = typeof value === "object";
 
     if (isFunc) {
-      result[key] = (...args: any[]) =>
-        /**
-         * I am using setState to get current state when I call async action,
-         * return current state without any change, create promise to handle
-         * result or error because setState is asynchronous.
-         */
-        new Promise((res, rej) => {
-          setState((state: any) => {
-            /**
-             * maybe i should check if the current function is a promise, it's possible crash here
-             */
-            try {
-              value
-                .call(null, [state, action], ...args)
-                .then(res)
-                .catch(rej);
-            } catch (error) {
-              rej(error);
-            }
-
-            return state;
-          });
-        });
+      result[key] = (...args: any[]) => value.call(null, action, ...args);
     }
 
     if (isObj) {
@@ -114,7 +101,7 @@ export default useAction;
  * Typings
  */
 
-type Action<T, S, R = T> = {
+export type Action<T, S, R = T> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
     ? (...args: A) => Action<R, S>
     : T[K] extends {
@@ -128,20 +115,17 @@ type Action<T, S, R = T> = {
       }
     ? Action<T[K], S, R>
     : never;
-};
+} & { (cb: (state: S) => S | void): void; getState: () => Promise<S> };
 
 type Thunk<T, A> = A extends Action<infer R, infer S>
   ? {
       readonly [K in keyof T]: T[K] extends (
-        store: [S, Action<R, S>],
+        action: Action<R, S>,
         ...args: infer E
       ) => Promise<infer F>
         ? (...args: E) => Promise<F>
         : T[K] extends {
-            [K: string]: (
-              store: [S, Action<R, S>],
-              ...args: any[]
-            ) => Promise<any>;
+            [K: string]: (action: Action<R, S>, ...args: any[]) => Promise<any>;
           }
         ? Thunk<T[K], A>
         : never;
@@ -170,5 +154,3 @@ export interface Create {
     thunk: TH
   ): [A, Thunk<TH, A>];
 }
-
-export type SetStore<S, R> = [S, Action<R, S>];
