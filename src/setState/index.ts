@@ -1,7 +1,9 @@
 import React from "react";
 
-export const createAction: CreateAction = (setState, reducer: any) => {
+export const createAction: CreateAction = ((setState: any, reducer: any, returnIt:any) => {
   const result: any = {};
+
+  const _returnIt = returnIt || result;
 
   Object.keys(reducer).forEach((key) => {
     const value = reducer[key];
@@ -11,15 +13,16 @@ export const createAction: CreateAction = (setState, reducer: any) => {
 
     if (isFunc) {
       result[key] = (...args: any[]) => {
-        return setState((state) => value.call(null, state, ...args) || state);
+        setState((state:any) => value.call(null, state, ...args) || state);
+        return _returnIt;
       };
     } else if (isObj) {
-      result[key] = createAction(setState, value);
+      result[key] = (createAction as any)(setState, value,result);
     }
   });
 
   return result;
-};
+}) as any;
 
 export const createThunk: CreateThunk = (setState, action, reducer: any) => {
   const result: any = {};
@@ -100,9 +103,9 @@ export default useAction;
  * Typings
  */
 
-type Action<T, S> = {
+type Action<T, S, R = T> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
-    ? (...args: A) => void
+    ? (...args: A) => Action<R, S>
     : T[K] extends {
         [K: string]:
           | ((state: S, ...args: any[]) => S)
@@ -112,7 +115,7 @@ type Action<T, S> = {
                 | { [K: string]: (state: S, ...args: any[]) => S };
             };
       }
-    ? Action<T[K], S>
+    ? Action<T[K], S, R>
     : never;
 };
 
