@@ -125,7 +125,7 @@ type Thunk<T, A> = A extends Action<infer R, infer S>
               [K: string]: (
                 action: Action<R, S>,
                 ...args: any[]
-              ) => Promise<any>;
+              ) => any;
             }
           ? Thunk<T[K], A>
           : never;
