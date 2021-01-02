@@ -7,7 +7,6 @@ import React from "react";
  * test what you have learned about react.
  */
 
-
 /**
  * Create Thunk
  * @param action associative array sync reducer
@@ -76,7 +75,6 @@ export const createAction: Create = ((
   return result;
 }) as any;
 
-
 /**
  * Returns an action and thunk with memorized setState
  *
@@ -115,34 +113,29 @@ export type Action<T, S> = {
 
 type Thunk<T, A> = A extends Action<infer R, infer S>
   ? {
-      thunk: {
-        [K in keyof T]: T[K] extends (
-          action: Action<R, S>,
-          ...args: infer E
-        ) => infer F
-          ? (...args: E) => F
-          : T[K] extends {
-              [K: string]: (
-                action: Action<R, S>,
-                ...args: any[]
-              ) => any;
-            }
-          ? Thunk<T[K], A>
-          : never;
-      };
+      [K in keyof T]: T[K] extends (
+        action: Action<R, S>,
+        ...args: infer E
+      ) => infer F
+        ? (...args: E) => F
+        : T[K] extends {
+            [K: string]: (action: Action<R, S>, ...args: any[]) => any;
+          }
+        ? Thunk<T[K], A>
+        : never;
     }
   : never;
 
 type CreateThunk = <A, T>(action: A, reducer: T) => Thunk<T, A>;
 
 export interface Create {
-  <T, R>(
-    setState: React.Dispatch<React.SetStateAction<T>>,
-    reducer: R
-  ): Action<R, T>;
+  <T, R>(setState: React.Dispatch<React.SetStateAction<T>>, reducer: R): Action<
+    R,
+    T
+  >;
   <T, R, TH>(
     setState: React.Dispatch<React.SetStateAction<T>>,
     reducer: R,
     thunk: TH
-  ): Action<R, T> & Thunk<TH, Action<R, T>>;
+  ): Action<R, T> & { thunk: Thunk<TH, Action<R, T>> };
 }
