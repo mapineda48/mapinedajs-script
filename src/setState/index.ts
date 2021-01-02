@@ -68,11 +68,13 @@ export const createAction: Create = ((
     }
   });
 
-  if (thunk) {
-    result.thunk = createThunk(result, thunk);
+  if (!thunk) {
+    return result;
   }
 
-  return result;
+  const resultT = createThunk(result, thunk);
+
+  return [result, resultT];
 }) as any;
 
 /**
@@ -95,9 +97,9 @@ export default useAction;
 /**
  * Typings
  */
-export type Action<T, S> = {
+export type IAction<T, S> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
-    ? (...args: A) => Action<T, S>
+    ? (...args: A) => IAction<T, S>
     : T[K] extends {
         [K: string]:
           | ((state: S, ...args: any[]) => S)
@@ -107,19 +109,19 @@ export type Action<T, S> = {
                 | { [K: string]: (state: S, ...args: any[]) => S };
             };
       }
-    ? Action<T[K], S>
+    ? IAction<T[K], S>
     : never;
 } & { (cb: (state: S) => S | void): void; getState: () => Promise<S> };
 
-type Thunk<T, A> = A extends Action<infer R, infer S>
+type Thunk<T, A> = A extends IAction<infer R, infer S>
   ? {
       [K in keyof T]: T[K] extends (
-        action: Action<R, S>,
+        action: IAction<R, S>,
         ...args: infer E
       ) => infer F
         ? (...args: E) => F
         : T[K] extends {
-            [K: string]: (action: Action<R, S>, ...args: any[]) => any;
+            [K: string]: (action: IAction<R, S>, ...args: any[]) => any;
           }
         ? Thunk<T[K], A>
         : never;
@@ -129,7 +131,7 @@ type Thunk<T, A> = A extends Action<infer R, infer S>
 type CreateThunk = <A, T>(action: A, reducer: T) => Thunk<T, A>;
 
 export interface Create {
-  <T, R>(setState: React.Dispatch<React.SetStateAction<T>>, reducer: R): Action<
+  <T, R>(setState: React.Dispatch<React.SetStateAction<T>>, reducer: R): IAction<
     R,
     T
   >;
@@ -137,5 +139,5 @@ export interface Create {
     setState: React.Dispatch<React.SetStateAction<T>>,
     reducer: R,
     thunk: TH
-  ): Action<R, T> & { thunk: Thunk<TH, Action<R, T>> };
+  ): [IAction<R, T>, Thunk<TH, IAction<R, T>>];
 }
