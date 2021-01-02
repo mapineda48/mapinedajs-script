@@ -64,7 +64,7 @@ export const createAction: Create = ((
         return result;
       };
     } else if (isObj) {
-      result[key] = (createAction as any)(setState, value, result);
+      result[key] = createAction(setState, value);
     }
   });
 
@@ -121,7 +121,9 @@ type Thunk<T, A> = A extends IAction<infer R, infer S>
       ) => infer F
         ? (...args: E) => F
         : T[K] extends {
-            [K: string]: (action: IAction<R, S>, ...args: any[]) => any;
+            [K: string]:
+              | ((action: IAction<R, S>, ...args: any[]) => any)
+              | { [K: string]: (action: IAction<R, S>, ...args: any[]) => any };
           }
         ? Thunk<T[K], A>
         : never;
@@ -131,10 +133,10 @@ type Thunk<T, A> = A extends IAction<infer R, infer S>
 type CreateThunk = <A, T>(action: A, reducer: T) => Thunk<T, A>;
 
 export interface Create {
-  <T, R>(setState: React.Dispatch<React.SetStateAction<T>>, reducer: R): IAction<
-    R,
-    T
-  >;
+  <T, R>(
+    setState: React.Dispatch<React.SetStateAction<T>>,
+    reducer: R
+  ): IAction<R, T>;
   <T, R, TH>(
     setState: React.Dispatch<React.SetStateAction<T>>,
     reducer: R,
