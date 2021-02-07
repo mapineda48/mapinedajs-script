@@ -65,30 +65,11 @@ function parseBuild() {
 
   const paths: PathsArg = {};
 
-  const entry = "--entry";
-
-  const output = "--output";
-
-  const url = "--url";
-
-  if (existsInLine([entry, output])) {
-    if (existsInLine(entry)) {
-      paths.appIndexJs = path.resolve(findValue(entry));
-    }
-
-    if (existsInLine(output)) {
-      paths.appBuild = path.resolve(findValue(output));
-    }
-    if (existsInLine(url)) {
-      paths.publicUrlOrPath = findValue(url);
-    }
-
-    return paths;
-  }
-
   const target = findValue(script);
 
-  if (target && target !== "default") {
+  const isApp = target && !target.includes("--") && target !== "default";
+
+  if (isApp) {
     const app = config[target];
 
     if (app) {
@@ -113,6 +94,23 @@ function parseBuild() {
     }
     if (app?.url) {
       paths.publicUrlOrPath = app.url;
+    }
+  } else {
+    const entry = "--entry";
+
+    const output = "--output";
+
+    const url = "--url";
+
+    if (existsInLine(entry)) {
+      paths.appIndexJs = path.resolve(findValue(entry));
+    }
+
+    if (existsInLine(output)) {
+      paths.appBuild = path.resolve(findValue(output));
+    }
+    if (existsInLine(url)) {
+      paths.publicUrlOrPath = findValue(url);
     }
   }
 
