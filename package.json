@@ -10,6 +10,10 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/mapineda48/mapineda-react.git"
+  },
   "engines": {
     "node": "^12.18.3",
     "yarn": "^1.22.5"
@@ -20,22 +24,27 @@
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "@types/fs-extra": "^9.0.5",
+    "@types/html-webpack-plugin": "^3.2.4",
     "@types/jest": "^26.0.15",
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.53",
     "@types/react-dom": "^16.9.8",
+    "@types/webpack": "^4.41.26",
+    "exact": "^0.8.0",
     "fs-extra": "^9.0.1",
+    "html-webpack-plugin": "4.5.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.0.3",
-    "web-vitals": "^0.2.4"
+    "web-vitals": "^0.2.4",
+    "webpack": "4.44.2"
   },
   "scripts": {
-    "dev:bin": "ts-node -P tsconfig.node.json src/bin/index.ts",
-    "start": "ts-node -P tsconfig.node.json src/bin/index.ts start",
-    "start:dist": "node dist/bin start",
+    "dev:bin": "ts-node -P tsconfig.node.json bin/index.ts",
+    "start": "ts-node -P tsconfig.node.json bin/index.ts --start",
+    "start:bin": "node dist/bin --start",
     "build:bin": "tsc -P tsconfig.node.json",
     "build:jsx": "tsc -P tsconfig.jsx.json",
     "build": "yarn build:bin && yarn build:jsx && yarn tasks",
@@ -68,15 +77,18 @@
   },
   "react-scripts": {
     "main": {
-      "entry": "src/app/index.tsx",
+      "entry": "src/mock-entry/index.tsx",
       "url": "./",
       "output": "build"
     },
     "foo": {
-      "entry": "src/app/foo.tsx",
+      "entry": "src/mock-entry/foo.tsx",
       "url": "./",
       "output": "build/foo"
     },
     "default": "main"
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.5.0"
   }
 }

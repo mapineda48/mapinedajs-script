@@ -5,9 +5,10 @@
     "module": "CommonJS",
     "outDir": "./dist/bin",
     "noEmit": false,
-    "declaration": true
+    "declaration": false,
+    "importHelpers": true
   },
   "include": [
-    "src/bin"
+    "bin"
   ]
 }

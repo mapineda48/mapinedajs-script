@@ -8,12 +8,13 @@
         "outDir": "./dist"
     },
     "exclude": [
-        "src/bin",
-        "src/app",
+        "src/mock-entry",
         "src/setupTests.ts",
         "src/reportWebVitals.ts",
         "src/setState/state",
         "src/**/*.dev.ts",
-        "src/**/*.dev.tsx"
+        "src/**/*.dev.tsx",
+        "src/**/*.test.ts",
+        "src/**/*.test.tsx"
     ]
 }

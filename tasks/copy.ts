@@ -8,6 +8,11 @@ files.push({
   dest: "dist/README.md",
 });
 
+files.push({
+  src: "CHANGELOG.md",
+  dest: "dist/CHANGELOG.md",
+});
+
 files.forEach((file) => {
   const src = path.resolve(file.src);
   const dest = path.resolve(file.dest);

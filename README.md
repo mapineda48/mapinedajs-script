@@ -38,19 +38,19 @@ set on `package.json`
 configuration default entry
 
 ```shell
-yarn mapineda start
+yarn mapineda --start
 ```
 
 argument entry
 
 ```shell
-yarn mapineda start my/path/entry.js
+yarn mapineda --start my/path/entry.js
 ```
 
 argument entry alias
 
 ```shell
-yarn mapineda start main
+yarn mapineda --start main
 ```
 
 ### build
@@ -58,13 +58,13 @@ yarn mapineda start main
 configuration default entry
 
 ```shell
-yarn mapineda build
+yarn mapineda --build
 ```
 
 argument alias
 
 ```shell
-yarn mapineda build main
+yarn mapineda --build main
 ```
 
 argument entry and argument build
