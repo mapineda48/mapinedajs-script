@@ -70,7 +70,7 @@ yarn mapineda --build main
 argument entry and argument build
 
 ```shell
-yarn mapineda build --entry my/entry.jsx --output my/build
+yarn mapineda build my/entry.jsx --output my/build
 ```
 
 ## Environment development

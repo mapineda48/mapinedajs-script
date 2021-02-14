@@ -5,8 +5,6 @@ import path from "path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import type { Configuration, Entry } from "webpack";
 
-export = null;
-
 /**
  * CLI
  */
@@ -50,14 +48,16 @@ if (existsInLine(flag.start)) {
     overwritePaths(build);
     require(src.build);
   } else {
+    const [apps, url] = build;
+
     /**
      * prevent process exit missing file
      * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/scripts/build.js#L59
      */
-    const [app] = build;
+    const [app] = apps;
     overwritePaths({ appIndexJs: app.entry });
 
-    overwriteConfig(build);
+    overwriteConfig(apps, url);
     require(src.build);
   }
 } else if (existsInLine(flag.cleanBuild)) {
@@ -75,30 +75,48 @@ function parseBuild() {
   if (existsInLine("entrys")) {
     delete config.default;
 
-    return Object.values(config) as App[];
+    const entrys = Object.values(config) as App[];
+
+    const url = findValue(flag.url);
+
+    return [entrys, url] as [App[], string];
   }
 
   const paths: PathsArg = {};
 
   const target = findValue(flag.build);
 
-  const isApp = target && target !== "default";
+  if (target) {
+    const isApp = target !== "default" && config[target];
 
-  if (isApp) {
-    const app = config[target];
+    if (isApp) {
+      const app = config[target];
 
-    if (app) {
-      if (app?.entry) {
-        paths.appIndexJs = path.resolve(app.entry);
+      if (app) {
+        if (app?.entry) {
+          paths.appIndexJs = path.resolve(app.entry);
+        }
+        if (app?.output) {
+          paths.appBuild = path.resolve(app.output);
+        }
+        if (app?.url) {
+          paths.publicUrlOrPath = app.url;
+        }
       }
-      if (app?.output) {
-        paths.appBuild = path.resolve(app.output);
-      }
-      if (app?.url) {
-        paths.publicUrlOrPath = app.url;
-      }
+    } else {
+      findValue(flag.build, (value) => {
+        paths.appIndexJs = path.resolve(value);
+      });
+
+      findValue(flag.output, (value) => {
+        paths.appBuild = path.resolve(value);
+      });
+
+      findValue(flag.url, (value) => {
+        paths.publicUrlOrPath = value;
+      });
     }
-  } else if (config?.default) {
+  } else if (config?.default && config[config.default]) {
     const app = config[config.default];
 
     if (app?.entry) {
@@ -110,18 +128,6 @@ function parseBuild() {
     if (app?.url) {
       paths.publicUrlOrPath = app.url;
     }
-  } else {
-    findValue(flag.entry, (value) => {
-      paths.appIndexJs = path.resolve(value);
-    });
-
-    findValue(flag.output, (value) => {
-      paths.appBuild = path.resolve(value);
-    });
-
-    findValue(flag.url, (value) => {
-      paths.publicUrlOrPath = value;
-    });
   }
 
   return paths;
@@ -140,7 +146,7 @@ function parseStart() {
     } else {
       paths.appIndexJs = path.resolve(target);
     }
-  } else if (config?.default) {
+  } else if (config?.default && config[config.default]) {
     const app = config[config.default];
 
     if (app?.entry) {
@@ -190,7 +196,7 @@ async function readdir(path: string) {
  * Update webpack Config
  * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L74
  */
-function overwriteConfig(apps: App[]) {
+function overwriteConfig(apps: App[], url: string) {
   const paths: Paths = require(src.paths);
 
   const factory: FactoryConfig = require(src.config);
@@ -199,6 +205,9 @@ function overwriteConfig(apps: App[]) {
 
   const entry: Entry = {};
 
+  /**
+   * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L592
+   */
   const [
     ,
     InterpolateHtmlPlugin,
@@ -229,7 +238,7 @@ function overwriteConfig(apps: App[]) {
     output: {
       ...current.output,
       path: path.resolve("build"),
-      publicPath: "",
+      publicPath: url,
     },
     plugins: [
       ...htmls,
@@ -315,7 +324,7 @@ function readPackage(key = "") {
     return json;
   }
 
-  return json[key];
+  return json[key] || {};
 }
 
 function existsInLine(value: string | string[]) {
@@ -345,7 +354,7 @@ function findValue(flag: any, cb?: any) {
   const isValid = value && !value.includes("--");
 
   if (cb) {
-    if (isValid) return cb(value);
+    if (isValid) cb(value);
     return;
   }
 
@@ -353,6 +362,8 @@ function findValue(flag: any, cb?: any) {
 
   return "";
 }
+
+export = null;
 
 /**
  * Types
