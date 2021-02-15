@@ -1,21 +1,47 @@
 #!/usr/bin/env node
 
-import fs from "fs-extra";
 import path from "path";
+import fs from "fs-extra";
+import { execSync } from "child_process";
+import { Command } from "commander";
+import ManifestPlugin from "webpack-manifest-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
-import type { Configuration, Entry } from "webpack";
+import { version, description } from "../package.json";
+
+import type { Configuration, Entry, Plugin } from "webpack";
 
 /**
- * CLI
+ * parse argv options
  */
-const flag = {
-  start: "--start",
-  build: "--build",
-  cleanBuild: "--clean-build",
-  entry: "--entry",
-  output: "--output",
-  url: "--url",
+
+const program = new Command();
+
+program.version(version);
+
+program
+  .description(description)
+  .option("-B, --build [path]", "react-scripts build")
+  .option("-S, --start [path]", "react-scripts start")
+  .option("-O, --output <path>", "output directory build")
+  .option("-U, --url <path>", "the view of the Javascript / HTML page")
+  .option("-C, --clean-build", "clean build path")
+  .option("-E, --exp-build", "experimental build entrys");
+
+program.parse();
+
+const options: Options = program.opts() as any;
+
+/**
+ * Internals
+ */
+const internal = {
+  BUILDENTRYS: "__BUILD_ENTRYS__",
 };
+
+/**
+ * Get config
+ */
+const config: any = readPackage("react-scripts");
 
 /**
  * react scripts
@@ -32,21 +58,20 @@ const src = {
  * Important!!!
  * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/env.js#L15
  */
-(process as any).env.NODE_ENV = process.env.NODE_ENV || "development";
+(process as any).env.NODE_ENV = process.env.NODE_ENV || "production";
 require(src.env);
 
-const config = readPackage("react-scripts");
+if (options.start) {
+  const start = parseStart(options);
 
-if (existsInLine(flag.start)) {
-  const paths = parseStart();
-  overwritePaths(paths);
+  overwritePaths(start);
+
   require(src.start);
-} else if (existsInLine(flag.build)) {
-  const build = parseBuild();
+} else if (options.build) {
+  const build = parseBuild(options);
 
   if (!Array.isArray(build)) {
     overwritePaths(build);
-    require(src.build);
   } else {
     const [apps, url] = build;
 
@@ -58,105 +83,35 @@ if (existsInLine(flag.start)) {
     overwritePaths({ appIndexJs: app.entry });
 
     overwriteConfig(apps, url);
-    require(src.build);
   }
-} else if (existsInLine(flag.cleanBuild)) {
+
+  require(src.build);
+} else if (options.cleanBuild) {
   removeUnunsed();
+} else if (options.expBuild) {
+  try {
+    parseBuild({ ...options, build: internal.BUILDENTRYS });
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+
+  const build = ["mapineda", "-B", internal.BUILDENTRYS];
+
+  if (options.url) {
+    build.push("-U", options.url);
+  }
+
+  const commands = [build.join(" "), `mapineda -C`];
+
+  commands.forEach((command) => {
+    execSync(command, { stdio: "inherit" });
+  });
 }
 
 /**
- *  Lib
+ * Lib
  */
-
-/**
- * Parse Build
- */
-function parseBuild() {
-  if (existsInLine("entrys")) {
-    delete config.default;
-
-    const entrys = Object.values(config) as App[];
-
-    const url = findValue(flag.url);
-
-    return [entrys, url] as [App[], string];
-  }
-
-  const paths: PathsArg = {};
-
-  const target = findValue(flag.build);
-
-  if (target) {
-    const isApp = target !== "default" && config[target];
-
-    if (isApp) {
-      const app = config[target];
-
-      if (app) {
-        if (app?.entry) {
-          paths.appIndexJs = path.resolve(app.entry);
-        }
-        if (app?.output) {
-          paths.appBuild = path.resolve(app.output);
-        }
-        if (app?.url) {
-          paths.publicUrlOrPath = app.url;
-        }
-      }
-    } else {
-      findValue(flag.build, (value) => {
-        paths.appIndexJs = path.resolve(value);
-      });
-
-      findValue(flag.output, (value) => {
-        paths.appBuild = path.resolve(value);
-      });
-
-      findValue(flag.url, (value) => {
-        paths.publicUrlOrPath = value;
-      });
-    }
-  } else if (config?.default && config[config.default]) {
-    const app = config[config.default];
-
-    if (app?.entry) {
-      paths.appIndexJs = path.resolve(app.entry);
-    }
-    if (app?.output) {
-      paths.appBuild = path.resolve(app.output);
-    }
-    if (app?.url) {
-      paths.publicUrlOrPath = app.url;
-    }
-  }
-
-  return paths;
-}
-
-function parseStart() {
-  const paths: PathsArg = {};
-
-  const target = findValue(flag.start);
-
-  if (target && target !== "default") {
-    const app = config[target];
-
-    if (app?.entry) {
-      paths.appIndexJs = path.resolve(app.entry);
-    } else {
-      paths.appIndexJs = path.resolve(target);
-    }
-  } else if (config?.default && config[config.default]) {
-    const app = config[config.default];
-
-    if (app?.entry) {
-      paths.appIndexJs = path.resolve(app.entry);
-    }
-  }
-
-  return paths;
-}
-
 async function removeUnunsed() {
   const src = path.resolve("public");
 
@@ -193,79 +148,6 @@ async function readdir(path: string) {
 }
 
 /**
- * Update webpack Config
- * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L74
- */
-function overwriteConfig(apps: App[], url: string) {
-  const paths: Paths = require(src.paths);
-
-  const factory: FactoryConfig = require(src.config);
-
-  const current = factory("production");
-
-  const entry: Entry = {};
-
-  /**
-   * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L592
-   */
-  const [
-    ,
-    InterpolateHtmlPlugin,
-    ModuleNotFoundPlugin,
-    DefinePlugin,
-    MiniCssExtractPlugin,
-    ,
-    IgnorePlugin,
-    ForkTsCheckerWebpackPlugin,
-    ESLintWebpackPlugin,
-  ] = current.plugins || [];
-
-  const htmls: HtmlWebpackPlugin[] = [];
-
-  apps.forEach((app, index) => {
-    const html = path.join(app.output, "index.html").replace(/^build\//i, "");
-
-    const chunk = index.toString();
-
-    entry[chunk] = path.resolve(app.entry);
-
-    htmls.push(createHTML(html, chunk, paths.appHtml));
-  });
-
-  const config: Configuration = {
-    ...current,
-    entry,
-    output: {
-      ...current.output,
-      path: path.resolve("build"),
-      publicPath: url,
-    },
-    plugins: [
-      ...htmls,
-      InterpolateHtmlPlugin,
-      ModuleNotFoundPlugin,
-      DefinePlugin,
-      MiniCssExtractPlugin,
-      IgnorePlugin,
-      ForkTsCheckerWebpackPlugin,
-      ESLintWebpackPlugin,
-    ],
-  };
-  const rest = require.cache[src.config];
-
-  delete require.cache[src.config];
-
-  require.cache[src.config] = {
-    ...rest,
-    exports: function () {
-      return config;
-    },
-  };
-
-  return [entry, htmls, config] as const;
-}
-
-/**
  * CreateHTML
  * @param app App
  * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L592
@@ -292,6 +174,143 @@ function createHTML(filename: string, chunk: string, template: string) {
 }
 
 /**
+ * overwrite react-scripts's webpack config
+ * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L74
+ */
+function overwriteConfig(apps: App[], url: string) {
+  const paths: Paths = require(src.paths);
+
+  const factory: FactoryConfig = require(src.config);
+
+  const current = factory("production");
+
+  const entry: Entry = {};
+
+  const plugins = extractPlugins(current.plugins);
+
+  const htmls: HtmlWebpackPlugin[] = [];
+
+  apps.forEach((app, index) => {
+    const html = path.join(app.output, "index.html").replace(/^build\//i, "");
+
+    const chunk = index.toString();
+
+    entry[chunk] = path.resolve(app.entry);
+
+    htmls.push(createHTML(html, chunk, paths.appHtml));
+  });
+
+  const config: Configuration = {
+    ...current,
+    entry,
+    output: {
+      ...current.output,
+      path: path.resolve("build"),
+      publicPath: url,
+    },
+    plugins: [...htmls, ...plugins],
+  };
+  const rest = require.cache[src.config];
+
+  delete require.cache[src.config];
+
+  require.cache[src.config] = {
+    ...rest,
+    exports: function () {
+      return config;
+    },
+  };
+
+  return [entry, htmls, config] as const;
+}
+
+/**
+ * https://github.com/facebook/create-react-app/blob/025f2739ceb459c79a281ddc6e60d7fd7322ca24/packages/react-scripts/config/webpack.config.js#L592
+ */
+function extractPlugins(plugins: Plugin[] = []) {
+  return plugins.filter(
+    (plugin) =>
+      !(plugin instanceof HtmlWebpackPlugin) &&
+      !(plugin instanceof ManifestPlugin)
+  );
+}
+
+/**
+ * Parse Build
+ */
+function parseBuild(opt: Options) {
+  const { build, url = "", output } = opt;
+
+  const paths: PathsArg = {};
+
+  if (!isString(build)) {
+    if (config?.default && config[config.default]) {
+      const app = config[config.default];
+
+      if (app?.entry) {
+        paths.appIndexJs = path.resolve(app.entry);
+      }
+      if (app?.output) {
+        paths.appBuild = path.resolve(app.output);
+      }
+      if (app?.url) {
+        paths.publicUrlOrPath = app.url;
+      }
+    }
+
+    return paths;
+  }
+
+  if (build === internal.BUILDENTRYS) {
+    delete config.default;
+
+    const entrys = Object.entries(config as Config).map(([app, config]) => {
+      if (!config.entry) {
+        throw new Error(`app "${app}" missing entry`);
+      }
+
+      if (!config.output) {
+        throw new Error(`app "${app}" missing output`);
+      }
+
+      return config;
+    });
+
+    return [entrys, url] as [App[], string];
+  }
+
+  const isApp = build !== "default" && config[build];
+
+  if (isApp) {
+    const app = config[build];
+
+    if (app) {
+      if (app?.entry) {
+        paths.appIndexJs = path.resolve(app.entry);
+      }
+      if (app?.output) {
+        paths.appBuild = path.resolve(app.output);
+      }
+      if (app?.url) {
+        paths.publicUrlOrPath = app.url;
+      }
+    }
+  } else {
+    paths.appIndexJs = path.resolve(build);
+  }
+
+  if (output) {
+    paths.appBuild = path.resolve(output);
+  }
+
+  if (url) {
+    paths.publicUrlOrPath = url;
+  }
+
+  return paths;
+}
+
+/**
  * Update paths in cache with input
  * https://nodejs.org/api/modules.html#modules_require_cache
  * @param paths object
@@ -315,6 +334,53 @@ function overwritePaths(paths: PathsArg) {
   return require(src.paths) as Paths;
 }
 
+/**
+ * parse start paths
+ * @param opt Options
+ */
+function parseStart(opt: Options) {
+  const paths: PathsArg = {};
+
+  if (!isString(opt.start)) {
+    if (config?.default && config[config.default]) {
+      const app = config[config.default];
+
+      if (app?.entry) {
+        paths.appIndexJs = path.resolve(app.entry);
+      }
+    }
+
+    return paths;
+  }
+
+  const target = opt.start;
+
+  if (target && target !== "default") {
+    const app = config[target];
+
+    if (app?.entry) {
+      paths.appIndexJs = path.resolve(app.entry);
+    } else {
+      paths.appIndexJs = path.resolve(target);
+    }
+  } else if (config?.default && config[config.default]) {
+    const app = config[config.default];
+
+    if (app?.entry) {
+      paths.appIndexJs = path.resolve(app.entry);
+    }
+  }
+
+  return paths;
+}
+
+function isString(val: any): val is string {
+  return typeof val === "string";
+}
+
+/**
+ * read config from root project package.json
+ */
 function readPackage(key = "") {
   const file = path.resolve("package.json");
 
@@ -327,47 +393,24 @@ function readPackage(key = "") {
   return json[key] || {};
 }
 
-function existsInLine(value: string | string[]) {
-  if (!Array.isArray(value)) {
-    return process.argv.includes(value);
-  }
-
-  const results = value.map((v) => process.argv.includes(v));
-
-  /**
-   * its like a operator logic or
-   */
-  return results.includes(true);
-}
-
-function findIndex(value: string) {
-  return process.argv.findIndex((v) => v === value);
-}
-
-function findValue(flag: string): string;
-function findValue(flag: string, cb: (value: string) => void): void;
-function findValue(flag: any, cb?: any) {
-  const index = findIndex(flag);
-
-  const value = process.argv[index + 1] || "";
-
-  const isValid = value && !value.includes("--");
-
-  if (cb) {
-    if (isValid) cb(value);
-    return;
-  }
-
-  if (isValid) return value;
-
-  return "";
-}
-
 export = null;
 
 /**
  * Types
  */
+type Env = Configuration["mode"];
+
+type FactoryConfig = (env: Env) => Configuration;
+
+interface Config {
+  [K: string]: App;
+}
+
+interface App {
+  entry: string;
+  url: string;
+  output: string;
+}
 
 type PathsArg = Partial<Paths>;
 
@@ -394,12 +437,11 @@ interface Paths {
   moduleFileExtensions: string[];
 }
 
-interface App {
-  entry: string;
-  url: string;
-  output: string;
+interface Options {
+  start?: true | string;
+  build?: true | string;
+  output?: string;
+  url?: string;
+  cleanBuild?: boolean;
+  expBuild?: boolean;
 }
-
-type Env = Configuration["mode"];
-
-type FactoryConfig = (env: Env) => Configuration;

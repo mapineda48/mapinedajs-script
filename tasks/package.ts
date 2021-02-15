@@ -14,6 +14,7 @@ const {
   publishConfig,
   repository,
   dependencies,
+  description,
 } = current;
 
 const bin = {
@@ -26,6 +27,7 @@ const next = {
   name,
   version,
   author,
+  description,
   homepage,
   license,
   bugs,
@@ -33,6 +35,7 @@ const next = {
   repository,
   bin,
   dependencies: {
+    commander: dependencies.commander,
     tslib: "^" + tslib,
     "fs-extra": dependencies["fs-extra"],
     "@popperjs/core": dependencies["@popperjs/core"],
