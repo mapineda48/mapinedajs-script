@@ -195,21 +195,17 @@ export const Popper: Component = (_props) => {
 };
 
 export const createPopper: Creator = (Content: any) => {
-  let _options: Opt;
-
-  const Current = function CreatePopper(props: any) {
+  function InstancePopper(props: any) {
     return React.createElement(Popper, {
       ...props,
       Content,
-      options: _options,
+      options: InstancePopper.options,
     });
-  };
+  }
 
-  Current.options = (options: Opt) => {
-    _options = options;
-  };
+  InstancePopper.options = {};
 
-  return Current;
+  return InstancePopper;
 };
 
 export default Popper;
@@ -254,7 +250,7 @@ type Creator = <C extends PropsContent>(
   Content: (props: C) => JSX.Element | null
 ) => {
   (props: PropsPopper<C>): JSX.Element | null;
-  options: (options: Opt) => void;
+  options: Opt;
 };
 
 type CB = (...args: any) => void;
