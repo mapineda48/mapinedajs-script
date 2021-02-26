@@ -41,9 +41,6 @@ function createThunk(action:any,reducer:any){
  * 
  * Warning!!! this is experimental
  *
- * @param setState react setState
- * @param sync associative array sync reducer
- * @param async associative array async reducer
  */
 export function createAction<T, R>(setState: SetState<T>, reducer: R): Action<R, T>
 export function createAction<T, R, A>(setState: SetState<T>, reducer: R,thunk:A):Actions<T,R,A>
