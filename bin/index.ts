@@ -2,7 +2,6 @@
 
 import path from "path";
 import fs from "fs-extra";
-import { execSync } from "child_process";
 import { Command } from "commander";
 import ManifestPlugin from "webpack-manifest-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
@@ -24,19 +23,11 @@ program
   .option("-S, --start [path]", "react-scripts start")
   .option("-O, --output <path>", "output directory build")
   .option("-U, --url <path>", "the view of the Javascript / HTML page")
-  .option("-C, --clean-build", "clean build path")
-  .option("-E, --exp-build", "experimental build entrys");
+  .option("-A, --all-entrys", "experimental build entrys");
 
 program.parse();
 
 const options: Options = program.opts() as any;
-
-/**
- * Internals
- */
-const internal = {
-  BUILDENTRYS: "__BUILD_ENTRYS__",
-};
 
 /**
  * Get config
@@ -86,66 +77,10 @@ if (options.start) {
   }
 
   require(src.build);
-} else if (options.cleanBuild) {
-  removeUnunsed();
-} else if (options.expBuild) {
-  try {
-    parseBuild({ ...options, build: internal.BUILDENTRYS });
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
-
-  const build = ["mapineda", "-B", internal.BUILDENTRYS];
-
-  if (options.url) {
-    build.push("-U", options.url);
-  }
-
-  const commands = [build.join(" "), `mapineda -C`];
-
-  commands.forEach((command) => {
-    execSync(command, { stdio: "inherit" });
-  });
 }
-
 /**
  * Lib
  */
-async function removeUnunsed() {
-  const src = path.resolve("public");
-
-  const build = path.resolve("build");
-
-  let files: string[];
-
-  try {
-    files = await readdir(src);
-  } catch (error) {
-    console.log(error);
-    return;
-  }
-
-  files
-    .filter((file) => file !== "index.html" && file !== "favicon.ico")
-    .map((file) => path.resolve(build, file))
-    .forEach(async (file) => {
-      try {
-        await fs.remove(file);
-      } catch (error) {
-        console.log(error);
-      }
-    });
-}
-
-async function readdir(path: string) {
-  return new Promise<string[]>((res, rej) => {
-    fs.readdir(path, (err, files) => {
-      if (err) return rej(err);
-      res(files);
-    });
-  });
-}
 
 /**
  * CreateHTML
@@ -239,7 +174,25 @@ function extractPlugins(plugins: Plugin[] = []) {
  * Parse Build
  */
 function parseBuild(opt: Options) {
-  const { build, url = "", output } = opt;
+  const { build, allEntrys, url = "", output } = opt;
+
+  if (allEntrys) {
+    delete config.default;
+
+    const entrys = Object.entries(config as Config).map(([app, config]) => {
+      if (!config.entry) {
+        throw new Error(`app "${app}" missing entry`);
+      }
+
+      if (!config.output) {
+        throw new Error(`app "${app}" missing output`);
+      }
+
+      return config;
+    });
+
+    return [entrys, url] as [App[], string];
+  }
 
   const paths: PathsArg = {};
 
@@ -259,24 +212,6 @@ function parseBuild(opt: Options) {
     }
 
     return paths;
-  }
-
-  if (build === internal.BUILDENTRYS) {
-    delete config.default;
-
-    const entrys = Object.entries(config as Config).map(([app, config]) => {
-      if (!config.entry) {
-        throw new Error(`app "${app}" missing entry`);
-      }
-
-      if (!config.output) {
-        throw new Error(`app "${app}" missing output`);
-      }
-
-      return config;
-    });
-
-    return [entrys, url] as [App[], string];
   }
 
   const isApp = build !== "default" && config[build];
@@ -442,6 +377,5 @@ interface Options {
   build?: true | string;
   output?: string;
   url?: string;
-  cleanBuild?: boolean;
-  expBuild?: boolean;
+  allEntrys?: boolean;
 }
