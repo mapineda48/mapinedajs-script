@@ -1,5 +1,4 @@
 import React from "react";
-
 /**
  * ok ... what you found here is a proposal for the implementation of an alternative
  * to redux and useReducer, also simplifying the API (or at least that's what I try),
@@ -7,12 +6,13 @@ import React from "react";
  * test what you have learned about react.
  */
 
+
 /**
- * Create Thunk
+ * Inject action in thunks
  * @param action associative array sync reducer
  * @param reducer associative array async reducer
  */
-export const createThunk: CreateThunk = (action, reducer: any) => {
+function createThunk(action:any,reducer:any){
   const result: any = {};
 
   /**
@@ -34,13 +34,20 @@ export const createThunk: CreateThunk = (action, reducer: any) => {
   });
 
   return result;
-};
+}
 
-export const createAction: Create = ((
-  setState: any,
-  reducer: any,
-  thunk: any
-) => {
+/**
+ * Wrap action with setState
+ * 
+ * Warning!!! this is experimental
+ *
+ * @param setState react setState
+ * @param sync associative array sync reducer
+ * @param async associative array async reducer
+ */
+export function createAction<T, R>(setState: SetState<T>, reducer: R): Action<R, T>
+export function createAction<T, R, A>(setState: SetState<T>, reducer: R,thunk:A):Actions<T,R,A>
+export function createAction(setState: any, reducer: any, thunk?: any): any {
   const result: any = (cb: any) => setState((state: any) => cb(state) || state);
 
   result.getState = () => {
@@ -75,31 +82,41 @@ export const createAction: Create = ((
   const resultT = createThunk(result, thunk);
 
   return [result, resultT];
-}) as any;
+}
 
-/**
- * Returns an action and thunk with memorized setState
- *
- * Warning!!! this is experimental
- *
- * @param setState setState is used as dispatch (redux inspiration)
- * @param reducer sync actions reducer statse
- * @param thunk async actions reducer state
- */
 export const useAction: Create = ((setState: any, reducer: any, thunk: any) => {
   return React.useMemo(() => {
     return createAction(setState, reducer, thunk);
   }, [setState, reducer, thunk]);
 }) as any;
 
-export default useAction;
-
 /**
- * Typings
+ * Types
  */
-export type IAction<T, S> = {
+type Create = typeof createAction;
+
+type Actions<T,R,A> = [Action<R, T>,Thunk<A,Action<R, T>>];
+
+type Thunk<T, A> = A extends Action<infer R, infer S>
+  ? {
+      [K in keyof T]: T[K] extends (
+        action: Action<R, S>,
+        ...args: infer E
+      ) => infer F
+        ? (...args: E) => F
+        : T[K] extends {
+            [K: string]:
+              | ((action: Action<R, S>, ...args: any[]) => any)
+              | { [K: string]: (action: Action<R, S>, ...args: any[]) => any };
+          }
+        ? Thunk<T[K], A>
+        : never;
+    }
+  : never;
+
+export type Action<T, S> = {
   readonly [K in keyof T]: T[K] extends (state: S, ...args: infer A) => S
-    ? (...args: A) => IAction<T, S>
+    ? (...args: A) => Action<T, S>
     : T[K] extends {
         [K: string]:
           | ((state: S, ...args: any[]) => S)
@@ -109,37 +126,8 @@ export type IAction<T, S> = {
                 | { [K: string]: (state: S, ...args: any[]) => S };
             };
       }
-    ? IAction<T[K], S>
+    ? Action<T[K], S>
     : never;
 } & { (cb: (state: S) => S | void): void; getState: () => Promise<S> };
 
-type Thunk<T, A> = A extends IAction<infer R, infer S>
-  ? {
-      [K in keyof T]: T[K] extends (
-        action: IAction<R, S>,
-        ...args: infer E
-      ) => infer F
-        ? (...args: E) => F
-        : T[K] extends {
-            [K: string]:
-              | ((action: IAction<R, S>, ...args: any[]) => any)
-              | { [K: string]: (action: IAction<R, S>, ...args: any[]) => any };
-          }
-        ? Thunk<T[K], A>
-        : never;
-    }
-  : never;
-
-type CreateThunk = <A, T>(action: A, reducer: T) => Thunk<T, A>;
-
-export interface Create {
-  <T, R>(
-    setState: React.Dispatch<React.SetStateAction<T>>,
-    reducer: R
-  ): IAction<R, T>;
-  <T, R, TH>(
-    setState: React.Dispatch<React.SetStateAction<T>>,
-    reducer: R,
-    thunk: TH
-  ): [IAction<R, T>, Thunk<TH, IAction<R, T>>];
-}
+type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
